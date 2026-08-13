@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebFlow Runtime Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-theme="dark" data-lang="ru">
+    <!-- Progress Bar -->
+    <div id="progress-container" class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>WebFlow Runtime</h1>
+        <div class="header-controls">
+            <div class="tabs-icons">
+                <button class="tab-icon active" data-tab="apps" title="Приложения">
+                    <span class="material-symbols-rounded">apps</span>
+                </button>
+                <button class="tab-icon" data-tab="settings" title="Общие настройки">
+                    <span class="material-symbols-rounded">settings</span>
+                </button>
+                <button class="tab-icon" data-tab="storage" title="Хранилище">
+                    <span class="material-symbols-rounded">storage</span>
+                </button>
+                <button class="tab-icon" data-tab="useragents" title="User-Agent'ы">
+                    <span class="material-symbols-rounded">badge</span>
+                </button>
+                <button class="tab-icon" data-tab="engine" title="Настройки движка">
+                    <span class="material-symbols-rounded">tune</span>
+                </button>
+            </div>
+            <div class="header-actions">
+                <button class="lang-toggle" onclick="toggleLanguage()" title="Язык / Language">
+                    <span class="material-symbols-rounded">language</span>
+                    <span class="lang-text">RU</span>
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Тема">
+                    <span class="material-symbols-rounded theme-icon"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Tab: Apps -->
+        <div id="tab-apps" class="tab-content active">
+            <div class="toolbar">
+                <button class="btn" onclick="showCreateModal()">
+                    <span class="material-symbols-rounded">add</span>
+                    <span data-i18n="create_app">Создать приложение</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadApps()">
+                    <span class="material-symbols-rounded">refresh</span>
+                    <span data-i18n="refresh">Обновить</span>
+                </button>
+                <button class="btn" onclick="showTemplatesModal()">
+                    <span class="material-symbols-rounded">dashboard</span>
+                    <span data-i18n="from_template">Из шаблона</span>
+                </button>
+            </div>
+            <div id="apps-container" class="apps-grid"></div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div id="tab-settings" class="tab-content">
+            <div class="settings-section">
+                <h3 data-i18n="general_settings">Общие параметры</h3>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="autostart">Автозапуск менеджера</div>
+                        <div class="settings-description" data-i18n="autostart_desc">Запускать менеджер при старте системы</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-autostart">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="minimize_tray">Минимизация в трей</div>
+                        <div class="settings-description" data-i18n="minimize_tray_desc">Сворачивать приложения в системный трей</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-tray">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="app_tray_icons">Иконки приложений в трее</div>
+                        <div class="settings-description" data-i18n="app_tray_icons_desc">Отображать отдельную иконку в системном трее для каждого запущенного приложения</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-app-tray-icons">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="tray_apps_menu">Меню приложений в трее менеджера</div>
+                        <div class="settings-description" data-i18n="tray_apps_menu_desc">Показывать список приложений в контекстном меню иконки трея менеджера</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-tray-apps-menu">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="google_oauth_fallback">Обход блокировок Google OAuth</div>
+                        <div class="settings-description" data-i18n="google_oauth_fallback_desc">Использовать системный браузер для авторизации через Google аккаунт</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-google-oauth-fallback" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Storage -->
+        <div id="tab-storage" class="tab-content">
+            <div class="settings-section">
+                <h3 data-i18n="storage_mode">Режим хранилища</h3>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="isolated_storage">Изолированное хранилище по умолчанию</div>
+                        <div class="settings-description" data-i18n="isolated_storage_desc">Каждое приложение использует отдельное хранилище куки и данных</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-isolated-storage" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3 data-i18n="data_management">Управление данными</h3>
+                <div class="storage-info">
+                    <div class="storage-item">
+                        <span class="storage-label" data-i18n="total_cache_size">Общий размер кэша:</span>
+                        <span class="storage-value" id="total-cache-size">Вычисление...</span>
+                    </div>
+                    <div class="storage-item">
+                        <span class="storage-label" data-i18n="total_data_size">Общий размер данных:</span>
+                        <span class="storage-value" id="total-data-size">Вычисление...</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="clearAllCache()">
+                        <span class="material-symbols-rounded">delete_sweep</span>
+                        <span data-i18n="clear_cache">Очистить кеш всех приложений</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAllData()">
+                        <span class="material-symbols-rounded">cookie</span>
+                        <span data-i18n="clear_cookies">Очистить куки всех приложений</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: User Agents -->
+        <div id="tab-useragents" class="tab-content">
+            <div class="toolbar">
+                <button class="btn" onclick="showAddUAModal()">
+                    <span class="material-symbols-rounded">add</span>
+                    <span data-i18n="add_useragent">Добавить User-Agent</span>
+                </button>
+            </div>
+            <div id="ua-list" class="ua-list"></div>
+        </div>
+
+        <!-- Tab: Engine Settings -->
+        <div id="tab-engine" class="tab-content">
+            <div class="settings-section">
+                <h3 data-i18n="engine_settings_title">Настройки движка</h3>
+
+                <div class="form-group">
+                    <label data-i18n="userdata_path">Путь к пользовательским данным</label>
+                    <div class="path-input-group">
+                        <input type="text" id="userdata-path" readonly>
+                        <button class="btn btn-secondary" onclick="selectUserdataPath()">
+                            <span class="material-symbols-rounded">folder_open</span>
+                            <span data-i18n="select_folder">Выбрать</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="openFolder('userdata')">
+                            <span class="material-symbols-rounded">open_in_new</span>
+                            <span data-i18n="open_folder">Открыть</span>
+                        </button>
+                    </div>
+                    <small class="form-hint" data-i18n="userdata_path_hint">Здесь хранятся все приложения и их данные</small>
+                </div>
+
+                <div class="paths-info">
+                    <h4 data-i18n="current_paths">Текущие пути</h4>
+
+                    <div class="path-item">
+                        <div class="path-label">
+                            <span class="material-symbols-rounded">apps</span>
+                            <span data-i18n="apps_path">Приложения</span>
+                        </div>
+                        <div class="path-value">
+                            <code id="apps-path"></code>
+                            <button class="btn-icon" onclick="openFolder('apps')" title="Открыть папку">
+                                <span class="material-symbols-rounded">open_in_new</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="path-item">
+                        <div class="path-label">
+                            <span class="material-symbols-rounded">settings</span>
+                            <span data-i18n="config_path">Настройки</span>
+                        </div>
+                        <div class="path-value">
+                            <code id="config-path"></code>
+                            <button class="btn-icon" onclick="openFolder('config')" title="Открыть папку">
+                                <span class="material-symbols-rounded">open_in_new</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="path-item">
+                        <div class="path-label">
+                            <span class="material-symbols-rounded">schedule</span>
+                            <span data-i18n="runtime_path">Runtime</span>
+                        </div>
+                        <div class="path-value">
+                            <code id="runtime-path"></code>
+                            <button class="btn-icon" onclick="openFolder('runtime')" title="Открыть папку">
+                                <span class="material-symbols-rounded">open_in_new</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="path-item">
+                        <div class="path-label">
+                            <span class="material-symbols-rounded">cloud</span>
+                            <span data-i18n="shared_storage_path">Общее хранилище</span>
+                        </div>
+                        <div class="path-value">
+                            <code id="shared-storage-path"></code>
+                            <button class="btn-icon" onclick="openFolder('shared_storage')" title="Открыть папку">
+                                <span class="material-symbols-rounded">open_in_new</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn" onclick="saveEngineSettings()">
+                        <span class="material-symbols-rounded">save</span>
+                        <span data-i18n="save_settings">Сохранить настройки</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadEngineSettings()">
+                        <span class="material-symbols-rounded">refresh</span>
+                        <span data-i18n="reload_settings">Обновить</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create/Edit App -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title" data-i18n="create_app">Создать приложение</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+
+            <form id="app-form">
+                <input type="hidden" id="app-id" value="">
+
+                <div class="form-group">
+                    <label data-i18n="app_name">Название приложения</label>
+                    <input type="text" id="app-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="app_url">URL сайта</label>
+                    <input type="url" id="app-url" required>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="app_icon">Иконка приложения</label>
+                    <div class="custom-file-input" id="app-icon-wrapper">
+                        <input type="file" id="app-icon" accept="image/*">
+                        <span class="custom-file-button" id="app-icon-button" data-i18n="choose_file">Выберите файл</span>
+                        <span class="custom-file-name" id="app-icon-filename" data-i18n="no_file_selected">Файл не выбран</span>
+                    </div>
+                    <div id="icon-preview" class="icon-preview" style="display: none;">
+                        <img id="icon-preview-img" src="" alt="Preview">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="window_title">Заголовок окна</label>
+                    <input type="text" id="window-title">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="window_width">Ширина окна (px)</label>
+                    <input type="number" id="window-width" value="1024" min="200" max="7680" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="window_height">Высота окна (px)</label>
+                    <input type="number" id="window-height" value="768" min="200" max="4320" step="1">
+                </div>
+
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="window-resizable" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="toggle-label" data-i18n="allow_resize">Разрешить изменение размера</label>
+                </div>
+
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="custom-scrollbar">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="toggle-label" data-i18n="custom_scrollbar">Кастомный скроллбар</label>
+                </div>
+
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="isolated-storage" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="toggle-label" data-i18n="isolated_storage">Изолированное хранилище</label>
+                </div>
+
+                <div class="form-group">
+                    <label>User-Agent</label>
+                    <select id="user-agent">
+                        <option value="default" data-i18n="default">По умолчанию</option>
+                        <option value="windows">Windows</option>
+                        <option value="linux">Linux</option>
+                        <option value="android">Android</option>
+                        <option value="iphone">iPhone</option>
+                        <option value="custom" data-i18n="custom">Свой</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="custom-ua-group" style="display: none;">
+                    <label data-i18n="custom_useragent">Свой User-Agent</label>
+                    <input type="text" id="custom-user-agent">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="custom_css">Кастомный CSS (опционально)</label>
+                    <textarea id="custom-css"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="custom_js">Кастомный JavaScript (опционально)</label>
+                    <textarea id="custom-js"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn" style="flex: 1;" data-i18n="save">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Templates -->
+    <div id="templates-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="select_template">Выбрать шаблон</h2>
+                <button class="close-btn" onclick="closeTemplatesModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div id="templates-list" class="apps-grid"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Add User Agent -->
+    <div id="ua-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="add_useragent">Добавить User-Agent</h2>
+                <button class="close-btn" onclick="closeUAModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <form id="ua-form">
+                <div class="form-group">
+                    <label data-i18n="name">Название</label>
+                    <input type="text" id="ua-name" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="useragent_string">User-Agent строка</label>
+                    <textarea id="ua-string" required></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn" style="flex: 1;" data-i18n="add">Добавить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUAModal()" data-i18n="cancel">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: App Settings Menu -->
+    <div id="app-settings-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 data-i18n="app_settings">Настройки приложения</h2>
+                <button class="close-btn" onclick="closeAppSettingsModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="settings-menu">
+                <button class="settings-menu-item" onclick="editAppFromSettings()">
+                    <span class="material-symbols-rounded">edit</span>
+                    <span data-i18n="edit_app">Редактировать приложение</span>
+                </button>
+                <button class="settings-menu-item" onclick="showImportCookiesModal()">
+                    <span class="material-symbols-rounded">login</span>
+                    <span data-i18n="import_chromium_cookies">Импорт cookies Chromium</span>
+                </button>
+                <button class="settings-menu-item" onclick="clearAppCache()">
+                    <span class="material-symbols-rounded">delete_sweep</span>
+                    <span data-i18n="clear_app_cache">Очистить кэш</span>
+                </button>
+                <button class="settings-menu-item" onclick="clearAppData()">
+                    <span class="material-symbols-rounded">cookie</span>
+                    <span data-i18n="clear_app_data">Очистить данные</span>
+                </button>
+                <button class="settings-menu-item danger" onclick="deleteAppFromSettings()">
+                    <span class="material-symbols-rounded">delete</span>
+                    <span data-i18n="delete_app">Удалить приложение</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirm-title" data-i18n="confirm_title">Подтверждение</h2>
+                <button class="close-btn" onclick="closeConfirmModal(false)">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmModal(false)" data-i18n="cancel">Отмена</button>
+                <button type="button" class="btn" id="confirm-accept-btn" onclick="closeConfirmModal(true)" data-i18n="ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="import-cookies-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 data-i18n="import_chromium_cookies">Импорт cookies Chromium</h2>
+                <button class="close-btn" onclick="closeImportCookiesModal()">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="form-hint" data-i18n="import_chromium_cookies_desc">Импортировать cookies из Chrome/Chromium в хранилище приложения</p>
+                <div class="form-group">
+                    <label data-i18n="browser_source">Браузер-источник</label>
+                    <select id="cookie-browser"></select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="browser_profile">Профиль браузера</label>
+                    <select id="cookie-profile"></select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeImportCookiesModal()" data-i18n="cancel">Отмена</button>
+                <button type="button" class="btn" onclick="importCookiesForCurrentApp()" data-i18n="import_now">Импортировать</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
