@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Returned support for tray icons and minimization without closing the manager.
+- The icon for the executable file has been returned.
+
 ### Changed
 - A FUNDAMENTAL CHANGE: The project has been completely rewritten in the Rust language.
 - Updated CLI command arguments and interactive option handling.

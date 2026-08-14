@@ -22,6 +22,11 @@ fn copy_directory(source: &Path, destination: &Path) -> std::io::Result<()> {
 
 fn main() {
     println!("cargo:rerun-if-changed=materials");
+    println!("cargo:rerun-if-changed=webflow-runtime.rc");
+
+    if env::var_os("CARGO_CFG_WINDOWS").is_some() {
+        let _ = embed_resource::compile("webflow-runtime.rc", embed_resource::NONE);
+    }
 
     let source = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("materials");
     if !source.exists() {

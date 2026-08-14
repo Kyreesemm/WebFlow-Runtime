@@ -4,6 +4,7 @@ mod app_runner;
 mod cli;
 mod config;
 mod manager;
+mod tray;
 mod window;
 
 use clap::Parser;

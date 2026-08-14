@@ -43,7 +43,15 @@ impl Default for WindowOptions {
 
 pub fn load_window_icon(path: &Path) -> Option<Icon> {
     let file = File::open(path).ok()?;
-    let mut decoder = png::Decoder::new(BufReader::new(file));
+    load_window_icon_from_reader(BufReader::new(file))
+}
+
+pub fn load_window_icon_bytes(bytes: &[u8]) -> Option<Icon> {
+    load_window_icon_from_reader(BufReader::new(std::io::Cursor::new(bytes)))
+}
+
+fn load_window_icon_from_reader<R: std::io::Read + std::io::Seek>(reader: R) -> Option<Icon> {
+    let mut decoder = png::Decoder::new(reader);
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
     let mut reader = decoder.read_info().ok()?;
     let mut buffer = vec![0; reader.output_buffer_size()];
