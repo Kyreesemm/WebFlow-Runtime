@@ -98,38 +98,38 @@
                         </label>
                     </div>
                 </div>
-                <div class="settings-row">
+                <div class="settings-row feature-unavailable">
                     <div>
                         <div class="settings-label" data-i18n="app_tray_icons">Иконки приложений в трее</div>
                         <div class="settings-description" data-i18n="app_tray_icons_desc">Отображать отдельную иконку в системном трее для каждого запущенного приложения</div>
                     </div>
                     <div class="toggle-group">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="setting-app-tray-icons">
+                            <input type="checkbox" id="setting-app-tray-icons" disabled>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="settings-row">
+                <div class="settings-row feature-unavailable">
                     <div>
                         <div class="settings-label" data-i18n="tray_apps_menu">Меню приложений в трее менеджера</div>
                         <div class="settings-description" data-i18n="tray_apps_menu_desc">Показывать список приложений в контекстном меню иконки трея менеджера</div>
                     </div>
                     <div class="toggle-group">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="setting-tray-apps-menu">
+                            <input type="checkbox" id="setting-tray-apps-menu" disabled>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="settings-row">
+                <div class="settings-row feature-unavailable">
                     <div>
                         <div class="settings-label" data-i18n="google_oauth_fallback">Обход блокировок Google OAuth</div>
                         <div class="settings-description" data-i18n="google_oauth_fallback_desc">Использовать системный браузер для авторизации через Google аккаунт</div>
                     </div>
                     <div class="toggle-group">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="setting-google-oauth-fallback" checked>
+                            <input type="checkbox" id="setting-google-oauth-fallback" checked disabled>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -437,9 +437,9 @@
                     <span class="material-symbols-rounded">edit</span>
                     <span data-i18n="edit_app">Редактировать приложение</span>
                 </button>
-                <button class="settings-menu-item" onclick="showImportCookiesModal()">
+                <button class="settings-menu-item feature-unavailable" disabled onclick="showImportCookiesModal()">
                     <span class="material-symbols-rounded">login</span>
-                    <span data-i18n="import_chromium_cookies">Импорт cookies Chromium</span>
+                    <span data-i18n="import_browser_cookies">Импорт cookies из браузера</span>
                 </button>
                 <button class="settings-menu-item" onclick="clearAppCache()">
                     <span class="material-symbols-rounded">delete_sweep</span>
@@ -478,13 +478,13 @@
     <div id="import-cookies-modal" class="modal">
         <div class="modal-content modal-small">
             <div class="modal-header">
-                <h2 data-i18n="import_chromium_cookies">Импорт cookies Chromium</h2>
+                <h2 data-i18n="import_browser_cookies">Импорт cookies из браузера</h2>
                 <button class="close-btn" onclick="closeImportCookiesModal()">
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p class="form-hint" data-i18n="import_chromium_cookies_desc">Импортировать cookies из Chrome/Chromium в хранилище приложения</p>
+                <p class="form-hint" data-i18n="import_browser_cookies_desc">Импортировать cookies из браузера в хранилище приложения</p>
                 <div class="form-group">
                     <label data-i18n="browser_source">Браузер-источник</label>
                     <select id="cookie-browser"></select>

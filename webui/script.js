@@ -84,8 +84,8 @@ const translations = {
         all_data_cleared: 'Данные всех приложений очищены',
         clear_all_cache_confirm: 'Очистить кэш всех приложений?',
         clear_all_data_confirm: 'Очистить данные всех приложений?',
-        import_chromium_cookies: 'Импорт cookies Chromium',
-        import_chromium_cookies_desc: 'Импортировать cookies из Chrome/Chromium в хранилище приложения',
+        import_browser_cookies: 'Импорт cookies из браузера',
+        import_browser_cookies_desc: 'Импортировать cookies из браузера в хранилище приложения',
         browser_source: 'Браузер-источник',
         browser_profile: 'Профиль браузера',
         import_now: 'Импортировать',
@@ -182,8 +182,8 @@ const translations = {
         all_data_cleared: 'Data cleared for all applications',
         clear_all_cache_confirm: 'Clear cache for all applications?',
         clear_all_data_confirm: 'Clear data for all applications?',
-        import_chromium_cookies: 'Import Chromium cookies',
-        import_chromium_cookies_desc: 'Import cookies from Chrome/Chromium into application storage',
+        import_browser_cookies: 'Import browser cookies',
+        import_browser_cookies_desc: 'Import cookies from a browser into application storage',
         browser_source: 'Browser source',
         browser_profile: 'Browser profile',
         import_now: 'Import',
@@ -1165,10 +1165,7 @@ async function saveGeneralSettings() {
 
         const settings = {
             autostart: autostart,
-            minimize_to_tray: minimizeToTray,
-            app_tray_icons: appTrayIcons,
-            tray_apps_menu: trayAppsMenu,
-            google_oauth_fallback: googleOauthFallback
+            minimize_to_tray: minimizeToTray
         };
 
         await new Promise((resolve) => {

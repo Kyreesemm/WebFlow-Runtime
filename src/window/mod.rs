@@ -19,6 +19,7 @@ pub struct WindowOptions {
     pub resizable: bool,
     pub frame_style: WindowFrameStyle,
     pub debug: bool,
+    pub position: Option<(i32, i32)>,
 }
 
 impl Default for WindowOptions {
@@ -30,6 +31,7 @@ impl Default for WindowOptions {
             resizable: true,
             frame_style: WindowFrameStyle::System,
             debug: false,
+            position: None,
         }
     }
 }

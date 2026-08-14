@@ -30,6 +30,7 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         resizable: config.window.resizable,
         frame_style,
         debug,
+        position: None,
     };
     let window = factory.create_window(&event_loop, &options)?;
 

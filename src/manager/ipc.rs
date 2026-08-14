@@ -229,13 +229,30 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
         }
         "saveWindowState" => {
             if let Some(val) = args.get(0) {
-                let json_str = if val.is_string() {
-                    val.as_str().unwrap_or("{}").to_string()
+                let incoming = if val.is_string() {
+                    serde_json::from_str::<Value>(val.as_str().unwrap_or("{}"))
+                        .unwrap_or_else(|_| serde_json::json!({}))
                 } else {
-                    serde_json::to_string(val).unwrap_or_else(|_| "{}".into())
+                    val.clone()
                 };
                 let path = Config::get_config_dir().join("window_state.json");
-                let _ = fs::write(path, json_str);
+                let mut state = fs::read_to_string(&path)
+                    .ok()
+                    .and_then(|content| serde_json::from_str::<Value>(&content).ok())
+                    .unwrap_or_else(|| serde_json::json!({}));
+
+                if !state.is_object() {
+                    state = serde_json::json!({});
+                }
+                if let (Some(state), Some(incoming)) = (state.as_object_mut(), incoming.as_object()) {
+                    for (key, value) in incoming {
+                        state.insert(key.clone(), value.clone());
+                    }
+                }
+
+                if let Ok(json_str) = serde_json::to_string_pretty(&state) {
+                    let _ = fs::write(path, json_str);
+                }
             }
             send_response(&webview_handle, id, "true");
         }
