@@ -1,6 +1,8 @@
 use crate::config::{AppConfig, Config, EngineSettings};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+#[cfg(unix)]
+use std::collections::HashSet;
 use std::fs;
 use std::process::Command;
 use std::sync::mpsc;
@@ -243,9 +245,9 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             });
 
             if let Ok(Some(folder)) = rx.recv() {
-                send_response(&webview_handle, id, &serde_json::to_string(&folder).unwrap_or_default());
+                send_response(&webview_handle, id, &folder);
             } else {
-                send_response(&webview_handle, id, "null");
+                send_response(&webview_handle, id, "");
             }
         }
         "openFolder" => {
@@ -291,15 +293,27 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             send_response(&webview_handle, id, "true");
         }
         "getTotalCacheSize" | "getTotalDataSize" => {
-            let mut total_bytes = 0u64;
-            let apps_dir = Config::get_apps_dir();
-            for entry in WalkDir::new(apps_dir).into_iter().flatten() {
-                if entry.file_type().is_file() {
-                    total_bytes += entry.metadata().map(|m| m.len()).unwrap_or(0);
+            // Both values are scoped to the shared WebView storage. Private
+            // app storage is shown on its own application card instead.
+            let formatted = format_size(directory_size(&Config::get_shared_storage_dir()));
+            send_response(&webview_handle, id, &formatted);
+        }
+        "getAppStorageSizes" => {
+            let mut sizes = Vec::new();
+            for app_id in Config::list_apps() {
+                if let Some(config) = Config::load_app_config(&app_id) {
+                    if config.isolated_storage {
+                        sizes.push(serde_json::json!({
+                            "id": app_id,
+                            "name": config.name,
+                            "size": format_size(directory_size(
+                                &Config::get_apps_dir().join(&app_id).join("storage")
+                            ))
+                        }));
+                    }
                 }
             }
-            let formatted = format_size(total_bytes);
-            send_response(&webview_handle, id, &serde_json::to_string(&formatted).unwrap_or_default());
+            send_response(&webview_handle, id, &serde_json::to_string(&sizes).unwrap_or_else(|_| "[]".into()));
         }
         "listCookieBrowsers" => {
             send_response(&webview_handle, id, "[]");
@@ -332,15 +346,42 @@ fn send_response(webview_handle: &Arc<Mutex<Option<WebView>>>, id: u64, json_dat
 }
 
 fn format_size(bytes: u64) -> String {
-    if bytes < 1024 {
+    // Use decimal units to match the values shown by Nautilus.
+    if bytes < 1_000 {
         format!("{} B", bytes)
-    } else if bytes < 1024 * 1024 {
-        format!("{:.1} KB", bytes as f64 / 1024.0)
-    } else if bytes < 1024 * 1024 * 1024 {
-        format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+    } else if bytes < 1_000_000 {
+        format!("{:.1} KB", bytes as f64 / 1_000.0)
+    } else if bytes < 1_000_000_000 {
+        format!("{:.1} MB", bytes as f64 / 1_000_000.0)
     } else {
-        format!("{:.2} GB", bytes as f64 / (1024.0 * 1024.0 * 1024.0))
+        format!("{:.2} GB", bytes as f64 / 1_000_000_000.0)
     }
+}
+
+fn directory_size(path: &std::path::Path) -> u64 {
+    #[cfg(unix)]
+    let mut seen_files = HashSet::new();
+    WalkDir::new(path)
+        .into_iter()
+        .flatten()
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| {
+            let metadata = entry.metadata().ok()?;
+
+            // WebKitGTK commonly hard-links cache blobs from Blobs/ into
+            // Records/.../Resource/. Count each inode once, like `du` and
+            // file managers do, instead of counting the same bytes twice.
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                if !seen_files.insert((metadata.dev(), metadata.ino())) {
+                    return None;
+                }
+            }
+
+            Some(metadata.len())
+        })
+        .sum()
 }
 
 #[derive(Serialize)]

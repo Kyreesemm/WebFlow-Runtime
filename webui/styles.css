@@ -1081,6 +1081,33 @@ body.theme-transitioning * {
     margin-bottom: 15px;
 }
 
+.private-storage-section {
+    margin: 18px 0 22px;
+}
+
+.private-storage-section h4 {
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.private-storage-list {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.storage-empty {
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 10px 0;
+}
+
 .storage-item {
     display: flex;
     justify-content: space-between;

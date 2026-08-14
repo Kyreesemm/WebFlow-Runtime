@@ -45,6 +45,9 @@ const translations = {
         clear_cookies: 'Очистить куки всех приложений',
         total_cache_size: 'Общий размер кэша:',
         total_data_size: 'Общий размер данных:',
+        private_storage_size: 'Пользовательские данные:',
+        private_storage_title: 'Изолированные хранилища приложений',
+        no_private_storage: 'Нет приложений с изолированным хранилищем',
         no_apps: 'Приложения не найдены',
         no_apps_desc: 'Создайте своё первое приложение, нажав кнопку "Создать приложение"',
         status_idle: 'Не запущено',
@@ -138,6 +141,9 @@ const translations = {
         clear_cookies: 'Clear Cookies for All Apps',
         total_cache_size: 'Total Cache Size:',
         total_data_size: 'Total Data Size:',
+        private_storage_size: 'User Data:',
+        private_storage_title: 'Isolated Application Storage',
+        no_private_storage: 'No applications use isolated storage',
         no_apps: 'No Applications Found',
         no_apps_desc: 'Create your first application by clicking "Create Application"',
         status_idle: 'Idle',
@@ -342,7 +348,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
                         if (state.active_tab === 'settings' || state.active_tab === 'engine') {
                             setTimeout(() => loadEngineSettings(), 50);
                         } else if (state.active_tab === 'storage') {
-                            setTimeout(() => updateStorageInfo(), 50);
+                            setTimeout(() => startStorageUpdater(), 50);
                         }
                     }
                 }
@@ -353,7 +359,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
             applyTranslations();
             loadApps();
             loadUserAgents();
-            updateStorageInfo();
+            startStorageUpdater();
             loadAvailableCookieBrowsers();
             startStatusUpdater();
         });
@@ -361,7 +367,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
         applyTranslations();
         loadApps();
         loadUserAgents();
-        updateStorageInfo();
+        startStorageUpdater();
         loadAvailableCookieBrowsers();
         startStatusUpdater();
     }
@@ -392,7 +398,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tabName === 'engine' || tabName === 'settings') {
                 loadEngineSettings();
             } else if (tabName === 'storage') {
-                updateStorageInfo();
+                startStorageUpdater();
+            } else {
+                stopStorageUpdater();
             }
         });
     });
@@ -1002,6 +1010,21 @@ async function clearAllData() {
 
 // Обновление статусов приложений
 let statusUpdateInterval = null;
+let storageUpdateInterval = null;
+let storageUpdateInProgress = false;
+
+function startStorageUpdater() {
+    if (storageUpdateInterval) clearInterval(storageUpdateInterval);
+    updateStorageInfo();
+    storageUpdateInterval = setInterval(updateStorageInfo, 2000);
+}
+
+function stopStorageUpdater() {
+    if (storageUpdateInterval) {
+        clearInterval(storageUpdateInterval);
+        storageUpdateInterval = null;
+    }
+}
 
 function startStatusUpdater() {
     // Обновлять статусы каждые 2 секунды
@@ -1215,19 +1238,55 @@ async function openFolder(folderType) {
 
 // Обновление информации о хранилище
 function updateStorageInfo() {
-    if (!managerAPI) return;
+    if (!managerAPI || storageUpdateInProgress) return;
+    storageUpdateInProgress = true;
+
+    let pending = 0;
+    const done = () => {
+        pending -= 1;
+        if (pending <= 0) storageUpdateInProgress = false;
+    };
 
     if (managerAPI.getTotalCacheSize) {
-        managerAPI.getTotalCacheSize(function(cacheSize) {
+        pending += 1;
+        managerAPI.getTotalCacheSize(cacheSize => {
             const elem = document.getElementById('total-cache-size');
-            if (elem) elem.textContent = cacheSize;
+            if (elem) elem.textContent = cacheSize || '0 B';
+            done();
         });
     }
 
     if (managerAPI.getTotalDataSize) {
-        managerAPI.getTotalDataSize(function(dataSize) {
+        pending += 1;
+        managerAPI.getTotalDataSize(dataSize => {
             const elem = document.getElementById('total-data-size');
-            if (elem) elem.textContent = dataSize;
+            if (elem) elem.textContent = dataSize || '0 B';
+            done();
         });
     }
+
+    if (managerAPI.getAppStorageSizes) {
+        pending += 1;
+        managerAPI.getAppStorageSizes(sizesJson => {
+            try {
+                const sizes = JSON.parse(sizesJson);
+                const container = document.getElementById('private-storage-list');
+                if (container) {
+                    container.innerHTML = sizes.length
+                        ? sizes.map(item => `
+                            <div class="storage-item">
+                                <span class="storage-label">${item.name}</span>
+                                <span class="storage-value">${item.size}</span>
+                            </div>
+                        `).join('')
+                        : `<div class="storage-empty">${translations[currentLang].no_private_storage}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading application storage sizes:', error);
+            }
+            done();
+        });
+    }
+
+    if (pending === 0) storageUpdateInProgress = false;
 }
