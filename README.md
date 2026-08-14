@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>This fork</b> of my WebFlow Runtime project has been <b>completely rewritten in Rust</b>, instead of the heavy and slow <b>Python</b>!
+  <b>This fork</b> of my WebFlow Runtime project has been <b>completely rewritten in Rust language</b>, instead of the heavy and slow <b>Python language</b>!
 </p>
 
 ---
