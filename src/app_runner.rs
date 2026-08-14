@@ -9,6 +9,8 @@ const LINUX_CHROME_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.3
 const WINDOWS_CHROME_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const IPHONE_SAFARI_UA: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1";
 const ANDROID_CHROME_UA: &str = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36";
+const CHROME_LINUX_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36";
+const CHROME_WINDOWS_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36";
 
 pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     let config: AppConfig = Config::load_app_config(&app_id)
@@ -47,6 +49,8 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         "windows" => Some(WINDOWS_CHROME_UA),
         "iphone" => Some(IPHONE_SAFARI_UA),
         "android" => Some(ANDROID_CHROME_UA),
+        "chrome-linux" => Some(CHROME_LINUX_UA),
+        "chrome-windows" => Some(CHROME_WINDOWS_UA),
         "custom" => config.custom_user_agent.as_deref().filter(|ua| !ua.is_empty()),
         _ => None,
     };

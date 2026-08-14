@@ -255,15 +255,33 @@ function applyTranslations() {
         langText.textContent = currentLang.toUpperCase();
     }
 
-    // Обновить select option "По умолчанию"
-    const defaultOption = document.querySelector('#user-agent option[value="default"]');
-    if (defaultOption) {
-        defaultOption.textContent = translations[currentLang].default;
-    }
-
     // Обновить file input (это делается через CSS, но текст нужно обновить через JS)
     // Браузер не позволяет менять текст file input напрямую, это ограничение безопасности
     updateFileInputLabel();
+}
+
+// Заполняем выбор User-Agent тем же встроенным списком, который показывает
+// вкладка User-Agent'ов. Пользовательские записи намеренно не добавляются.
+function populateBuiltInUserAgents(selectedId = 'default') {
+    if (!managerAPI || !managerAPI.listUserAgents) return;
+
+    managerAPI.listUserAgents(function(uaJson) {
+        try {
+            const userAgents = JSON.parse(uaJson).filter(ua => !ua.custom);
+            const select = document.getElementById('user-agent');
+            if (!select) return;
+
+            select.innerHTML = userAgents.map(ua =>
+                `<option value="${ua.id}">${ua.id === 'default' ? 'Default' : ua.name}</option>`
+            ).join('');
+
+            select.value = userAgents.some(ua => ua.id === selectedId)
+                ? selectedId
+                : 'default';
+        } catch (error) {
+            console.error('Error loading built-in User-Agents:', error);
+        }
+    });
 }
 
 // Переключение языка
@@ -313,6 +331,7 @@ function saveFullWindowState() {
 new QWebChannel(qt.webChannelTransport, function(channel) {
     managerAPI = channel.objects.managerAPI;
     console.log('WebChannel connected');
+    populateBuiltInUserAgents();
 
     // Подписываемся на сигнал изменения списка приложений
     if (managerAPI.appsChanged) {
@@ -365,6 +384,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
         });
     } else {
         applyTranslations();
+        populateBuiltInUserAgents();
         loadApps();
         loadUserAgents();
         startStorageUpdater();
@@ -407,11 +427,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Показать/скрыть поле кастомного User-Agent
-document.getElementById('user-agent').addEventListener('change', function() {
-    const customGroup = document.getElementById('custom-ua-group');
-    customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
-});
-
 document.getElementById('cookie-browser')?.addEventListener('change', updateCookieProfileOptions);
 
 function updateFileInputLabel() {
@@ -633,16 +648,11 @@ function editApp(appId) {
         document.getElementById('window-resizable').checked = config.window.resizable;
         document.getElementById('custom-scrollbar').checked = config.custom_scrollbar;
         document.getElementById('isolated-storage').checked = config.isolated_storage;
-        document.getElementById('user-agent').value = config.user_agent;
-        document.getElementById('custom-user-agent').value = config.custom_user_agent || '';
+        populateBuiltInUserAgents(config.user_agent);
         document.getElementById('custom-css').value = config.custom_css || '';
         document.getElementById('custom-js').value = config.custom_js || '';
         window.currentImportedCookies = config.imported_cookies || [];
         updateFileInputLabel();
-
-        // Показать поле кастомного UA если нужно
-        const customGroup = document.getElementById('custom-ua-group');
-        customGroup.style.display = config.user_agent === 'custom' ? 'block' : 'none';
 
         document.getElementById('modal').classList.add('active');
     });
@@ -759,7 +769,7 @@ document.getElementById('app-form').addEventListener('submit', function(e) {
                 custom_frame: false
             },
             user_agent: document.getElementById('user-agent').value,
-            custom_user_agent: document.getElementById('custom-user-agent').value,
+            custom_user_agent: null,
             custom_scrollbar: document.getElementById('custom-scrollbar').checked,
             isolated_storage: document.getElementById('isolated-storage').checked,
             custom_css: document.getElementById('custom-css').value,
