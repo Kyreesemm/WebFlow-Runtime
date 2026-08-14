@@ -317,9 +317,14 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
 fn send_response(webview_handle: &Arc<Mutex<Option<WebView>>>, id: u64, json_data: &str) {
     if let Ok(guard) = webview_handle.lock() {
         if let Some(ref webview) = *guard {
+            // The legacy Qt WebChannel API returns JSON text. The manager UI
+            // parses every response, including arrays and objects, as JSON.
+            // Encode the complete payload as a JS string before invoking the
+            // callback so Rust and the old frontend keep the same contract.
+            let js_data = serde_json::to_string(json_data).unwrap_or_else(|_| "\"null\"".into());
             let script = format!(
                 "if (window.__WEBFLOW_IPC_CALLBACK__) window.__WEBFLOW_IPC_CALLBACK__({}, {});",
-                id, json_data
+                id, js_data
             );
             let _ = webview.evaluate_script(&script);
         }

@@ -108,12 +108,24 @@ pub struct Config;
 
 impl Config {
     pub fn get_base_dir() -> PathBuf {
-        if let Ok(exe_path) = std::env::current_exe() {
-            if let Some(parent) = exe_path.parent() {
-                return parent.to_path_buf();
-            }
+        // Match the former Python layout while developing: `cargo run` puts
+        // the executable under target/debug, but userdata remains alongside
+        // Cargo.toml in the project root. Release builds keep userdata next
+        // to the installed executable.
+        #[cfg(debug_assertions)]
+        {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         }
-        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+
+        #[cfg(not(debug_assertions))]
+        {
+            if let Ok(exe_path) = std::env::current_exe() {
+                if let Some(parent) = exe_path.parent() {
+                    return parent.to_path_buf();
+                }
+            }
+            std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+        }
     }
 
     pub fn get_userdata_base() -> PathBuf {
