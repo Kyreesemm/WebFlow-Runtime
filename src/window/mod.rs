@@ -70,13 +70,13 @@ pub fn load_window_icon(path: &Path) -> Option<Icon> {
     Icon::from_rgba(rgba, info.width, info.height).ok()
 }
 
-pub fn apply_window_icon(window: &Window, path: &Path, _icon: Option<Icon>) {
+pub fn apply_window_icon(window: &Window, _path: &Path, _icon: Option<Icon>) {
     #[cfg(target_os = "linux")]
     {
         use gtk::prelude::*;
         use tao::platform::unix::WindowExtUnix;
 
-        if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file(path) {
+        if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file(_path) {
             window.gtk_window().set_icon(Some(&pixbuf));
         }
     }

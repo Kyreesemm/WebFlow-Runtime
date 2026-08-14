@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+#[cfg(not(target_os = "windows"))]
+use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowConfig {
@@ -318,20 +320,20 @@ impl Config {
     fn pid_exists(pid: u32) -> bool {
         #[cfg(target_os = "windows")]
         {
-            use std::ptr;
+            use std::ptr::null_mut;
+            use windows_sys::Win32::Foundation::CloseHandle;
             use windows_sys::Win32::System::Threading::{
-                CloseHandle, GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
-                STILL_ACTIVE,
+                GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
             };
             unsafe {
                 let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
-                if handle == 0 {
+                if handle == null_mut() {
                     return false;
                 }
                 let mut exit_code: u32 = 0;
                 let res = GetExitCodeProcess(handle, &mut exit_code);
                 CloseHandle(handle);
-                res != 0 && exit_code == STILL_ACTIVE as u32
+                res != 0 && exit_code == 259
             }
         }
         #[cfg(not(target_os = "windows"))]

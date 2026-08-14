@@ -24,3 +24,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed code compilation for Windows.
 - Fixed an issue with displaying application icons in the manager.
 - Fixed the icons of individual application windows.
+- Minor issues preventing the project from being built for Windows have been fixed.

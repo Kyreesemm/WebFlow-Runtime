@@ -2,6 +2,7 @@
 **/*.rs.bk
 
 /old-webflow
+/win-release
 
 .vscode/
 .idea/
