@@ -4,6 +4,7 @@
 /old-webflow
 /win-release
 /releases
+/no-public
 
 .vscode/
 .idea/
