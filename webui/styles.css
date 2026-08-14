@@ -555,7 +555,7 @@ body.theme-transitioning * {
     overflow-y: auto;
     overflow-x: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    transform: scale(0.9) translateY(20px);
+    transform: translateY(10px);
     animation: modalSlideIn 0.3s ease forwards;
 }
 
@@ -579,7 +579,7 @@ body.theme-transitioning * {
 
 @keyframes modalSlideIn {
     to {
-        transform: scale(1) translateY(0);
+        transform: translateY(0);
     }
 }
 
@@ -1435,7 +1435,7 @@ body.theme-transitioning * {
     overflow-y: auto;
     overflow-x: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    transform: scale(0.9) translateY(20px);
+    transform: translateY(10px);
     animation: modalSlideIn 0.3s ease forwards;
 }
 
@@ -1459,7 +1459,7 @@ body.theme-transitioning * {
 
 @keyframes modalSlideIn {
     to {
-        transform: scale(1) translateY(0);
+        transform: translateY(0);
     }
 }
 

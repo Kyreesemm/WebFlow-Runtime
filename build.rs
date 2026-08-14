@@ -1,0 +1,40 @@
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+fn copy_directory(source: &Path, destination: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(destination)?;
+
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let source_path = entry.path();
+        let destination_path = destination.join(entry.file_name());
+
+        if source_path.is_dir() {
+            copy_directory(&source_path, &destination_path)?;
+        } else {
+            fs::copy(source_path, destination_path)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn main() {
+    println!("cargo:rerun-if-changed=materials");
+
+    let source = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("materials");
+    if !source.exists() {
+        return;
+    }
+
+    let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let Some(profile_dir) = out_dir.ancestors().nth(3) else {
+        return;
+    };
+
+    let destination = profile_dir.join("materials");
+    if let Err(error) = copy_directory(&source, &destination) {
+        println!("cargo:warning=Failed to copy materials: {error}");
+    }
+}

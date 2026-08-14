@@ -2,7 +2,10 @@ pub mod custom;
 pub mod system;
 
 use tao::event_loop::EventLoopWindowTarget;
-use tao::window::Window;
+use tao::window::{Icon, Window};
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 use wry::{WebView, WebViewBuilder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,6 +23,7 @@ pub struct WindowOptions {
     pub frame_style: WindowFrameStyle,
     pub debug: bool,
     pub position: Option<(i32, i32)>,
+    pub icon: Option<Icon>,
 }
 
 impl Default for WindowOptions {
@@ -32,7 +36,54 @@ impl Default for WindowOptions {
             frame_style: WindowFrameStyle::System,
             debug: false,
             position: None,
+            icon: None,
         }
+    }
+}
+
+pub fn load_window_icon(path: &Path) -> Option<Icon> {
+    let file = File::open(path).ok()?;
+    let mut decoder = png::Decoder::new(BufReader::new(file));
+    decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
+    let mut reader = decoder.read_info().ok()?;
+    let mut buffer = vec![0; reader.output_buffer_size()];
+    let info = reader.next_frame(&mut buffer).ok()?;
+    let data = &buffer[..info.buffer_size()];
+
+    let rgba = match info.color_type {
+        png::ColorType::Rgba => data.to_vec(),
+        png::ColorType::Rgb => data
+            .chunks_exact(3)
+            .flat_map(|pixel| [pixel[0], pixel[1], pixel[2], 255])
+            .collect(),
+        png::ColorType::Grayscale => data
+            .iter()
+            .flat_map(|&value| [value, value, value, 255])
+            .collect(),
+        png::ColorType::GrayscaleAlpha => data
+            .chunks_exact(2)
+            .flat_map(|pixel| [pixel[0], pixel[0], pixel[0], pixel[1]])
+            .collect(),
+        _ => return None,
+    };
+
+    Icon::from_rgba(rgba, info.width, info.height).ok()
+}
+
+pub fn apply_window_icon(window: &Window, path: &Path, _icon: Option<Icon>) {
+    #[cfg(target_os = "linux")]
+    {
+        use gtk::prelude::*;
+        use tao::platform::unix::WindowExtUnix;
+
+        if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file(path) {
+            window.gtk_window().set_icon(Some(&pixbuf));
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        window.set_window_icon(_icon);
     }
 }
 

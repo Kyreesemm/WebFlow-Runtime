@@ -11,6 +11,7 @@ const translations = {
         app_name: 'Название приложения',
         app_url: 'URL сайта',
         app_icon: 'Иконка приложения',
+        current_icon: 'Текущая иконка',
         window_title: 'Заголовок окна',
         window_width: 'Ширина окна (px)',
         window_height: 'Высота окна (px)',
@@ -107,6 +108,7 @@ const translations = {
         app_name: 'Application Name',
         app_url: 'Website URL',
         app_icon: 'Application Icon',
+        current_icon: 'Current icon',
         window_title: 'Window Title',
         window_width: 'Window Width (px)',
         window_height: 'Window Height (px)',
@@ -590,9 +592,8 @@ function loadApps() {
         }
 
         container.innerHTML = apps.map(app => {
-            const timestamp = new Date().getTime();
-            const iconHtml = app.hasIcon
-                ? `<img src="file://${app.iconPath}?t=${timestamp}" alt="${app.name}">`
+            const iconHtml = app.hasIcon && app.iconData
+                ? `<img src="${app.iconData}" alt="${app.name}">`
                 : `<span>${app.name.charAt(0).toUpperCase()}</span>`;
 
             // Убираем https:// и http:// из URL
@@ -652,7 +653,20 @@ function editApp(appId) {
         document.getElementById('custom-css').value = config.custom_css || '';
         document.getElementById('custom-js').value = config.custom_js || '';
         window.currentImportedCookies = config.imported_cookies || [];
+        const iconInput = document.getElementById('app-icon');
+        if (iconInput) iconInput.value = '';
+        const iconPreview = document.getElementById('icon-preview');
+        if (iconPreview) iconPreview.style.display = 'none';
+        const iconPreviewImage = document.getElementById('icon-preview-img');
+        if (iconPreviewImage) iconPreviewImage.removeAttribute('src');
         updateFileInputLabel();
+
+        if (config.icon && config.iconData) {
+            if (iconPreviewImage) iconPreviewImage.src = config.iconData;
+            if (iconPreview) iconPreview.style.display = 'flex';
+            const iconFileName = document.getElementById('app-icon-filename');
+            if (iconFileName) iconFileName.textContent = translations[currentLang].current_icon;
+        }
 
         document.getElementById('modal').classList.add('active');
     });
@@ -684,10 +698,7 @@ function showCreateModal() {
 // Закрыть модальное окно
 function closeModal() {
     const modal = document.getElementById('modal');
-    modal.classList.add('closing');
-    setTimeout(() => {
-        modal.classList.remove('active', 'closing');
-    }, 300);
+    modal.classList.remove('active', 'closing');
 }
 
 // Показать модальное окно шаблонов
@@ -886,11 +897,8 @@ function openAppSettings(appId) {
 
 function closeAppSettingsModal() {
     const modal = document.getElementById('app-settings-modal');
-    modal.classList.add('closing');
-    setTimeout(() => {
-        modal.classList.remove('active', 'closing');
-        currentAppId = null;
-    }, 300);
+    modal.classList.remove('active', 'closing');
+    currentAppId = null;
 }
 
 function editAppFromSettings() {

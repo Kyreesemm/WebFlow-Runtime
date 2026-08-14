@@ -174,6 +174,35 @@ impl Config {
         dir
     }
 
+    pub fn get_app_icon_path(app_id: &str) -> PathBuf {
+        let custom_icon = Self::get_apps_dir().join(app_id).join("icon.png");
+        if custom_icon.exists() {
+            custom_icon
+        } else {
+            Self::get_base_dir()
+                .join("materials")
+                .join("default")
+                .join("app_icon.png")
+        }
+    }
+
+    pub fn ensure_app_icon(app_id: &str) {
+        let app_dir = Self::get_apps_dir().join(app_id);
+        let icon_path = app_dir.join("icon.png");
+        if icon_path.exists() {
+            return;
+        }
+
+        let default_icon = Self::get_base_dir()
+            .join("materials")
+            .join("default")
+            .join("app_icon.png");
+        if default_icon.exists() {
+            let _ = fs::create_dir_all(&app_dir);
+            let _ = fs::copy(default_icon, icon_path);
+        }
+    }
+
     pub fn list_apps() -> Vec<String> {
         let apps_dir = Self::get_apps_dir();
         let mut apps = Vec::new();
@@ -205,7 +234,9 @@ impl Config {
         fs::create_dir_all(&app_dir).map_err(|e| e.to_string())?;
         let path = app_dir.join("config.json");
         let json = serde_json::to_string_pretty(config).map_err(|e| e.to_string())?;
-        fs::write(path, json).map_err(|e| e.to_string())
+        fs::write(path, json).map_err(|e| e.to_string())?;
+        Self::ensure_app_icon(app_id);
+        Ok(())
     }
 
     pub fn delete_app(app_id: &str) -> Result<(), String> {

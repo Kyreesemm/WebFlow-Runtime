@@ -15,7 +15,8 @@ impl SystemWindowFactory {
             .with_title(&options.title)
             .with_inner_size(LogicalSize::new(options.width, options.height))
             .with_resizable(options.resizable)
-            .with_decorations(true);
+            .with_decorations(true)
+            .with_window_icon(options.icon.clone());
 
         if let Some((x, y)) = options.position {
             builder = builder.with_position(PhysicalPosition::new(x, y));

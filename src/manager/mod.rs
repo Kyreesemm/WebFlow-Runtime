@@ -75,6 +75,7 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
         frame_style: WindowFrameStyle::System,
         debug,
         position,
+        icon: None,
     };
 
     let factory = WindowFactory::new(WindowFrameStyle::System);

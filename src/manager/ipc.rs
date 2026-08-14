@@ -10,6 +10,7 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use walkdir::WalkDir;
 use wry::WebView;
+use base64::Engine;
 
 #[derive(Debug, Deserialize)]
 pub struct IpcPayload {
@@ -38,14 +39,26 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             let mut apps = Vec::new();
             for app_id in app_ids {
                 if let Some(config) = Config::load_app_config(&app_id) {
-                    let icon_path = Config::get_apps_dir().join(&app_id).join("icon.png");
+                    Config::ensure_app_icon(&app_id);
+                    let icon_path = Config::get_app_icon_path(&app_id);
                     let has_icon = icon_path.exists();
+                    let icon_data = if has_icon {
+                        fs::read(&icon_path).ok().map(|bytes| {
+                            format!(
+                                "data:image/png;base64,{}",
+                                base64::engine::general_purpose::STANDARD.encode(bytes)
+                            )
+                        })
+                    } else {
+                        None
+                    };
                     apps.push(serde_json::json!({
                         "id": app_id,
                         "name": config.name,
                         "url": config.url,
                         "iconPath": icon_path.to_string_lossy(),
-                        "hasIcon": has_icon
+                        "hasIcon": has_icon,
+                        "iconData": icon_data
                     }));
                 }
             }
@@ -55,7 +68,23 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
         "getAppConfig" => {
             if let Some(app_id) = args.get(0).and_then(|v| v.as_str()) {
                 if let Some(config) = Config::load_app_config(app_id) {
-                    let json_str = serde_json::to_string(&config).unwrap_or_else(|_| "{}".into());
+                    let mut config_value = serde_json::to_value(&config).unwrap_or_else(|_| serde_json::json!({}));
+                    if let Some(object) = config_value.as_object_mut() {
+                        let icon_path = Config::get_app_icon_path(app_id);
+                        let has_custom_icon = config.icon.as_deref() == Some("icon.png");
+                        let icon_data = if has_custom_icon {
+                            fs::read(icon_path).ok().map(|bytes| {
+                                format!(
+                                    "data:image/png;base64,{}",
+                                    base64::engine::general_purpose::STANDARD.encode(bytes)
+                                )
+                            })
+                        } else {
+                            None
+                        };
+                        object.insert("iconData".into(), serde_json::json!(icon_data));
+                    }
+                    let json_str = serde_json::to_string(&config_value).unwrap_or_else(|_| "{}".into());
                     send_response(&webview_handle, id, &json_str);
                     return;
                 }

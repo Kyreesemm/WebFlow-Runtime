@@ -1,9 +1,84 @@
 use crate::config::{AppConfig, Config};
-use crate::window::{build_webview, WindowFactory, WindowFrameStyle, WindowOptions};
+use crate::window::{apply_window_icon, build_webview, load_window_icon, WindowFactory, WindowFrameStyle, WindowOptions};
 use tao::event_loop::{ControlFlow, EventLoop};
 use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use wry::{WebContext, WebViewBuilder};
+
+#[cfg(target_os = "linux")]
+fn prepare_linux_app_id(app_id: &str, config: &AppConfig, icon_path: &std::path::Path) -> String {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let safe_id: String = app_id
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' { ch } else { '-' })
+        .collect();
+    let desktop_id = format!("com.webflow.runtime.{}", safe_id);
+
+    let data_home = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share")));
+
+    if let Some(data_home) = data_home {
+        let applications_dir = data_home.join("applications");
+        let _ = fs::create_dir_all(&applications_dir);
+        if let Ok(executable) = std::env::current_exe() {
+            let escape_exec_arg = |value: &str| {
+                format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
+            };
+            let desktop_entry = format!(
+                "[Desktop Entry]\nType=Application\nName={}\nExec={} --app {}\nIcon={}\nNoDisplay=true\nTerminal=false\nStartupNotify=true\n",
+                config.name.replace(['\n', '\r'], " "),
+                escape_exec_arg(&executable.to_string_lossy()),
+                escape_exec_arg(app_id),
+                icon_path.to_string_lossy()
+            );
+            let _ = fs::write(
+                applications_dir.join(format!("{}.desktop", desktop_id)),
+                desktop_entry,
+            );
+        }
+    }
+
+    desktop_id
+}
+
+#[cfg(target_os = "linux")]
+fn create_app_event_loop(app_id: &str, config: &AppConfig, icon_path: &std::path::Path) -> EventLoop<()> {
+    use tao::event_loop::EventLoopBuilder;
+    use tao::platform::unix::EventLoopBuilderExtUnix;
+
+    let desktop_id = prepare_linux_app_id(app_id, config, icon_path);
+    let mut builder = EventLoopBuilder::new();
+    builder.with_app_id(desktop_id);
+    builder.build()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn create_app_event_loop(_app_id: &str, _config: &AppConfig, _icon_path: &std::path::Path) -> EventLoop<()> {
+    EventLoop::new()
+}
+
+#[cfg(target_os = "linux")]
+fn configure_linux_window_backend() {
+    let is_wayland_session = std::env::var("XDG_SESSION_TYPE")
+        .map(|value| value.eq_ignore_ascii_case("wayland"))
+        .unwrap_or(false);
+    let has_xwayland = std::env::var_os("DISPLAY").is_some();
+
+    // GTK3/Tao cannot send the staged per-toplevel-icon Wayland protocol.
+    // KDE therefore ignores GtkWindow::icon and shows the generic Wayland
+    // application icon. Use XWayland for app windows when it is available;
+    // the X11 window icon path is supported by GTK and KDE.
+    if is_wayland_session && has_xwayland {
+        std::env::set_var("GDK_BACKEND", "x11");
+        std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn configure_linux_window_backend() {}
 
 const LINUX_CHROME_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const WINDOWS_CHROME_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -16,7 +91,9 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     let config: AppConfig = Config::load_app_config(&app_id)
         .ok_or_else(|| format!("App configuration not found for '{}'", app_id))?;
 
-    let event_loop = EventLoop::new();
+    configure_linux_window_backend();
+    let icon_path = Config::get_app_icon_path(&app_id);
+    let event_loop = create_app_event_loop(&app_id, &config, &icon_path);
     let frame_style = if config.window.custom_frame {
         WindowFrameStyle::Custom
     } else {
@@ -31,6 +108,7 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         frame_style,
         debug,
         position: None,
+        icon: load_window_icon(&icon_path),
     };
     let window = factory.create_window(&event_loop, &options)?;
 
@@ -126,6 +204,7 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     builder = builder.with_url("about:blank");
 
     let webview = build_webview(builder, &window)?;
+    apply_window_icon(&window, &icon_path, options.icon.clone());
     webview.load_url(&config.url).map_err(|e| e.to_string())?;
     Config::mark_app_running(&app_id, std::process::id());
 

@@ -21,3 +21,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issues with displaying and selecting User-Agents.
 - Fixed the incorrect operation of cleaning the shared storage.
 - Minor issues with the manager's web interface have been fixed.
+- Fixed code compilation for Windows.
+- Fixed an issue with displaying application icons in the manager.
