@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Prevented multiple WebFlow Runtime Manager processes and duplicate tray icons from being created.
+- Optimized Linux tray minimize/restore and close handling while keeping the manager WebView unloaded in the tray.
 
 ---
 

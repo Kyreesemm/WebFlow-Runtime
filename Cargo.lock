@@ -3425,6 +3425,7 @@ dependencies = [
  "clap",
  "embed-resource",
  "gtk",
+ "libc",
  "mime_guess",
  "open",
  "png 0.17.16",

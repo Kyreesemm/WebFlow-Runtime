@@ -3,6 +3,7 @@
 mod app_runner;
 mod cli;
 mod config;
+mod instance;
 mod manager;
 mod tray;
 mod window;

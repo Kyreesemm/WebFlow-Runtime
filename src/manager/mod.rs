@@ -3,6 +3,9 @@ pub mod ipc;
 pub mod webui;
 
 use crate::tray::{ManagerTray, EXIT_ID, SHOW_ID};
+use crate::instance::{
+    request_manager_activation, start_activation_listener, ManagerInstanceLock,
+};
 use crate::window::{
     apply_window_icon, build_webview, load_window_icon_bytes, WindowFactory, WindowFrameStyle,
     WindowOptions, MANAGER_MIN_HEIGHT, MANAGER_MIN_WIDTH, MAX_WINDOW_HEIGHT, MAX_WINDOW_WIDTH,
@@ -119,6 +122,15 @@ fn save_manager_geometry(window: &Window) {
 }
 
 pub fn run_manager(debug: bool) -> Result<(), String> {
+    let instance_lock = match ManagerInstanceLock::acquire() {
+        Ok(lock) => lock,
+        Err(error) if error.contains("already running") => {
+            let _ = request_manager_activation();
+            return Ok(());
+        }
+        Err(error) => return Err(error),
+    };
+    let activation_receiver = start_activation_listener();
     let (width, height, position) = load_manager_geometry();
     let icon_path = crate::config::Config::get_base_dir()
         .join("materials")
@@ -184,7 +196,24 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
     let menu_events = MenuEvent::receiver();
 
     event_loop.run(move |event, _, control_flow| {
+        let _keep_instance_lock = &instance_lock;
         *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(250));
+
+        if let Some(receiver) = activation_receiver.as_ref() {
+            if receiver.try_recv().is_ok() {
+                window.set_visible(true);
+                window.set_minimized(false);
+                window.set_focus();
+                if webview_handle.lock().unwrap().is_none() {
+                    if let Err(error) = create_webview(&window, webview_handle.clone(), debug) {
+                        eprintln!("Failed to restore manager WebView: {error}");
+                    }
+                }
+                if let Some(current_tray) = tray.as_ref() {
+                    current_tray.set_interface_visible(true);
+                }
+            }
+        }
 
         while let Ok(menu_event) = menu_events.try_recv() {
             if let Some(current_tray) = tray.as_ref() {
@@ -192,7 +221,7 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
                     if window.is_visible() {
                         save_manager_geometry(&window);
                         window.set_visible(false);
-                        *webview_handle.lock().unwrap() = None;
+                        suspend_webview(&webview_handle);
                         current_tray.set_interface_visible(false);
                     } else {
                         window.set_visible(true);
@@ -205,10 +234,8 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
                         current_tray.set_interface_visible(true);
                     }
                 } else if menu_event.id() == current_tray.exit_item.id() || menu_event.id().0 == EXIT_ID {
-                    *webview_handle.lock().unwrap() = None;
                     save_manager_geometry(&window);
-                    *control_flow = ControlFlow::Exit;
-                    return;
+                    std::process::exit(0);
                 }
             }
         }
@@ -236,7 +263,7 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
             save_manager_geometry(&window);
             window.set_visible(false);
             window.set_minimized(false);
-            *webview_handle.lock().unwrap() = None;
+            suspend_webview(&webview_handle);
             if let Some(current_tray) = tray.as_ref() {
                 current_tray.set_interface_visible(false);
             }
@@ -251,19 +278,30 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
                 if tray_enabled {
                     save_manager_geometry(&window);
                     window.set_visible(false);
-                    *webview_handle.lock().unwrap() = None;
+                    suspend_webview(&webview_handle);
                     if let Some(current_tray) = tray.as_ref() {
                         current_tray.set_interface_visible(false);
                     }
                 } else {
                     save_manager_geometry(&window);
-                    *webview_handle.lock().unwrap() = None;
+                    suspend_webview(&webview_handle);
                     *control_flow = ControlFlow::Exit;
                 }
             }
             _ => {}
         }
     });
+}
+
+fn suspend_webview(webview_handle: &Arc<Mutex<Option<WebView>>>) {
+    if let Ok(mut guard) = webview_handle.lock() {
+        if let Some(webview) = guard.as_ref() {
+            let _ = webview.evaluate_script(
+                "window.stop(); if (typeof stopStorageUpdater === 'function') stopStorageUpdater(); if (typeof stopStatusUpdater === 'function') stopStatusUpdater();",
+            );
+        }
+        *guard = None;
+    }
 }
 
 fn create_webview(
