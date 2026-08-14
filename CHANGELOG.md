@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+
+### Fixed
+
+---
+
+## [v0.1.1-dev] - August 15th, 2026
+
+### Changed
 - The logic of working with memory in all usage scenarios has been changed.
 
 ### Fixed
@@ -20,8 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Windows executable icon resource embedding for native Windows builds.
 - Resolved rendering lifecycle issues and improved engine performance and resource efficiency.
 - Minor bugs have been fixed in the Windows version.
-
----
 
 ## [v0.1.0-dev] - August 14th, 2026
 
