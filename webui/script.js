@@ -203,16 +203,18 @@ const translations = {
 
 // Определение языка системы
 function getSystemLanguage() {
-    const lang = navigator.language || navigator.userLanguage;
+    const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
     return lang.startsWith('ru') ? 'ru' : 'en';
 }
 
 // Текущий язык
-let currentLang = localStorage.getItem('language') || getSystemLanguage();
+const savedLanguage = localStorage.getItem('language');
+let currentLang = translations[savedLanguage] ? savedLanguage : getSystemLanguage();
 document.body.setAttribute('data-lang', currentLang);
 
 // Применение переводов
 function applyTranslations() {
+    document.documentElement.lang = currentLang;
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (translations[currentLang][key]) {
@@ -221,6 +223,13 @@ function applyTranslations() {
             } else {
                 element.textContent = translations[currentLang][key];
             }
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        if (translations[currentLang][key]) {
+            element.setAttribute('title', translations[currentLang][key]);
         }
     });
 
@@ -233,7 +242,8 @@ function applyTranslations() {
             apps: currentLang === 'ru' ? 'Приложения' : 'Applications',
             settings: currentLang === 'ru' ? 'Общие настройки' : 'General Settings',
             storage: currentLang === 'ru' ? 'Хранилище' : 'Storage',
-            useragents: currentLang === 'ru' ? 'User-Agent\'ы' : 'User-Agents'
+            useragents: currentLang === 'ru' ? 'User-Agent\'ы' : 'User-Agents',
+            engine: currentLang === 'ru' ? 'Настройки движка' : 'Engine Settings'
         };
         if (tooltips[tabName]) {
             tab.setAttribute('title', tooltips[tabName]);
@@ -248,7 +258,7 @@ function applyTranslations() {
 
     const langToggle = document.querySelector('.lang-toggle');
     if (langToggle) {
-        langToggle.setAttribute('title', currentLang === 'ru' ? 'Язык / Language' : 'Language / Язык');
+        langToggle.setAttribute('title', currentLang === 'ru' ? 'Язык' : 'Language');
     }
 
     // Обновить текст языка
