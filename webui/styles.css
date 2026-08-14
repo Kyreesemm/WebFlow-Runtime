@@ -1143,6 +1143,19 @@ body.theme-transitioning * {
     color: var(--accent-orange);
 }
 
+.storage-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.storage-detail-label {
+    color: var(--text-secondary);
+}
+
 /* Container */
 .container {
     max-width: 1400px;

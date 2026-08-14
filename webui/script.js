@@ -47,6 +47,8 @@ const translations = {
         total_cache_size: 'Общий размер кэша:',
         total_data_size: 'Общий размер данных:',
         private_storage_size: 'Пользовательские данные:',
+        private_cache_size: 'Кэш:',
+        private_data_size: 'Данные:',
         private_storage_title: 'Изолированные хранилища приложений',
         no_private_storage: 'Нет приложений с изолированным хранилищем',
         no_apps: 'Приложения не найдены',
@@ -144,6 +146,8 @@ const translations = {
         total_cache_size: 'Total Cache Size:',
         total_data_size: 'Total Data Size:',
         private_storage_size: 'User Data:',
+        private_cache_size: 'Cache:',
+        private_data_size: 'Data:',
         private_storage_title: 'Isolated Application Storage',
         no_private_storage: 'No applications use isolated storage',
         no_apps: 'No Applications Found',
@@ -985,24 +989,28 @@ async function importCookiesForCurrentApp() {
 function clearAppCache() {
     const appId = currentAppId;
     if (appId && managerAPI) {
-        managerAPI.clearAppCache(appId);
-        closeAppSettingsModal();
-        setTimeout(() => {
+        managerAPI.clearAppCache(appId, result => {
+            closeAppSettingsModal();
             updateStorageInfo();
-            showNotification(translations[currentLang].cache_cleared, 'success');
-        }, 300);
+            showNotification(
+                result === 'true' ? translations[currentLang].cache_cleared : translations[currentLang].error_saving,
+                result === 'true' ? 'success' : 'error'
+            );
+        });
     }
 }
 
 function clearAppData() {
     const appId = currentAppId;
     if (appId && managerAPI) {
-        managerAPI.clearAppData(appId);
-        closeAppSettingsModal();
-        setTimeout(() => {
+        managerAPI.clearAppData(appId, result => {
+            closeAppSettingsModal();
             updateStorageInfo();
-            showNotification(translations[currentLang].data_cleared, 'success');
-        }, 300);
+            showNotification(
+                result === 'true' ? translations[currentLang].data_cleared : translations[currentLang].error_saving,
+                result === 'true' ? 'success' : 'error'
+            );
+        });
     }
 }
 
@@ -1013,12 +1021,14 @@ async function clearAllCache() {
     if (!confirmed) return;
 
     showProgress();
-    managerAPI.clearAllCache();
-    setTimeout(() => {
+    managerAPI.clearAllCache(result => {
         hideProgress();
         updateStorageInfo();
-        showNotification(translations[currentLang].all_cache_cleared, 'success');
-    }, 300);
+        showNotification(
+            result === 'true' ? translations[currentLang].all_cache_cleared : translations[currentLang].error_saving,
+            result === 'true' ? 'success' : 'error'
+        );
+    });
 }
 
 async function clearAllData() {
@@ -1028,12 +1038,14 @@ async function clearAllData() {
     if (!confirmed) return;
 
     showProgress();
-    managerAPI.clearAllData();
-    setTimeout(() => {
+    managerAPI.clearAllData(result => {
         hideProgress();
         updateStorageInfo();
-        showNotification(translations[currentLang].all_data_cleared, 'success');
-    }, 300);
+        showNotification(
+            result === 'true' ? translations[currentLang].all_data_cleared : translations[currentLang].error_saving,
+            result === 'true' ? 'success' : 'error'
+        );
+    });
 }
 
 // Обновление статусов приложений
@@ -1301,7 +1313,10 @@ function updateStorageInfo() {
                         ? sizes.map(item => `
                             <div class="storage-item">
                                 <span class="storage-label">${item.name}</span>
-                                <span class="storage-value">${item.size}</span>
+                                <span class="storage-details">
+                                    <span><span class="storage-detail-label">${translations[currentLang].private_cache_size}</span> ${item.cache_size || '0 B'}</span>
+                                    <span><span class="storage-detail-label">${translations[currentLang].private_data_size}</span> ${item.data_size || '0 B'}</span>
+                                </span>
                             </div>
                         `).join('')
                         : `<div class="storage-empty">${translations[currentLang].no_private_storage}</div>`;

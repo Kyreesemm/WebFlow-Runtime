@@ -4,7 +4,7 @@ use serde_json::Value;
 #[cfg(unix)]
 use std::collections::HashSet;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
@@ -316,49 +316,49 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
         }
         "clearAppCache" | "clearAppData" => {
             if let Some(app_id) = args.get(0).and_then(|v| v.as_str()) {
-                let storage = Config::get_apps_dir().join(app_id).join("storage");
-                if cmd == "clearAppCache" {
-                    clear_webview_cache(&storage);
+                let storage = Config::load_app_config(app_id)
+                    .filter(|config| config.isolated_storage)
+                    .map(|_| Config::get_apps_dir().join(app_id).join("storage"))
+                    .unwrap_or_else(Config::get_shared_storage_dir);
+                let cleared = if cmd == "clearAppCache" {
+                    clear_webview_cache(&storage)
                 } else {
-                    clear_webview_cookies(&storage);
-                }
-                send_response(&webview_handle, id, "true");
+                    clear_webview_cookies(&storage)
+                };
+                send_response(&webview_handle, id, if cleared { "true" } else { "false" });
             } else {
                 send_response(&webview_handle, id, "false");
             }
         }
         "clearAllCache" | "clearAllData" => {
+            let mut cleared = true;
             let apps_dir = Config::get_apps_dir();
             if let Ok(entries) = fs::read_dir(apps_dir) {
                 for entry in entries.flatten() {
                     let storage = entry.path().join("storage");
-                    if cmd == "clearAllCache" {
-                        clear_webview_cache(&storage);
+                    cleared = if cmd == "clearAllCache" {
+                        clear_webview_cache(&storage)
                     } else {
-                        clear_webview_cookies(&storage);
-                    }
+                        clear_webview_cookies(&storage)
+                    } && cleared;
                 }
             }
             let shared = Config::get_shared_storage_dir();
-            if cmd == "clearAllCache" {
-                clear_webview_cache(&shared);
+            cleared = if cmd == "clearAllCache" {
+                clear_webview_cache(&shared)
             } else {
-                clear_webview_cookies(&shared);
-            }
-            send_response(&webview_handle, id, "true");
+                clear_webview_cookies(&shared)
+            } && cleared;
+            send_response(&webview_handle, id, if cleared { "true" } else { "false" });
         }
         "getTotalCacheSize" => {
             let shared = Config::get_shared_storage_dir();
-            let total = directory_size(&shared.join("WebKitCache"))
-                + directory_size(&shared.join("CacheStorage"));
-            let formatted = format_size(total);
+            let formatted = format_size(storage_size(&shared).cache);
             send_response(&webview_handle, id, &formatted);
         }
         "getTotalDataSize" => {
-            // Data excludes the two cache trees shown by getTotalCacheSize.
             let shared = Config::get_shared_storage_dir();
-            let total = directory_size_excluding(&shared, &["WebKitCache", "CacheStorage"]);
-            let formatted = format_size(total);
+            let formatted = format_size(storage_size(&shared).data);
             send_response(&webview_handle, id, &formatted);
         }
         "getAppStorageSizes" => {
@@ -366,12 +366,14 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             for app_id in Config::list_apps() {
                 if let Some(config) = Config::load_app_config(&app_id) {
                     if config.isolated_storage {
+                        let storage_sizes = storage_size(
+                            &Config::get_apps_dir().join(&app_id).join("storage"),
+                        );
                         sizes.push(serde_json::json!({
                             "id": app_id,
                             "name": config.name,
-                            "size": format_size(directory_size(
-                                &Config::get_apps_dir().join(&app_id).join("storage")
-                            ))
+                            "cache_size": format_size(storage_sizes.cache),
+                            "data_size": format_size(storage_sizes.data),
                         }));
                     }
                 }
@@ -421,83 +423,139 @@ fn format_size(bytes: u64) -> String {
     }
 }
 
-fn directory_size(path: &std::path::Path) -> u64 {
+const CACHE_DIRECTORY_NAMES: &[&str] = &[
+    "webkitcache",
+    "cachestorage",
+    "cache",
+    "code cache",
+    "gpucache",
+    "dawncache",
+    "grshadercache",
+    "shadercache",
+];
+
+#[derive(Default)]
+struct StorageSizes {
+    cache: u64,
+    data: u64,
+}
+
+fn normalized_file_name(path: &Path) -> Option<String> {
+    path.file_name()
+        .map(|name| name.to_string_lossy().to_ascii_lowercase())
+}
+
+fn is_cache_directory(path: &Path) -> bool {
+    normalized_file_name(path)
+        .map(|name| CACHE_DIRECTORY_NAMES.contains(&name.as_str()))
+        .unwrap_or(false)
+}
+
+fn is_cookie_file(path: &Path) -> bool {
+    normalized_file_name(path)
+        .map(|name| {
+            name == "cookies"
+                || name.starts_with("cookies-")
+                || name.starts_with("cookies.")
+        })
+        .unwrap_or(false)
+}
+
+fn is_inside_cache(storage: &Path, path: &Path) -> bool {
+    path.strip_prefix(storage)
+        .ok()
+        .map(|relative| relative.components().any(|component| {
+            let name = component.as_os_str().to_string_lossy().to_ascii_lowercase();
+            CACHE_DIRECTORY_NAMES.contains(&name.as_str())
+        }))
+        .unwrap_or(false)
+}
+
+fn storage_size(storage: &Path) -> StorageSizes {
     #[cfg(unix)]
     let mut seen_files = HashSet::new();
-    WalkDir::new(path)
-        .into_iter()
-        .flatten()
-        .filter(|entry| entry.file_type().is_file())
-        .filter_map(|entry| {
-            let metadata = entry.metadata().ok()?;
+    let mut sizes = StorageSizes::default();
 
-            // WebKitGTK commonly hard-links cache blobs from Blobs/ into
-            // Records/.../Resource/. Count each inode once, like `du` and
-            // file managers do, instead of counting the same bytes twice.
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::MetadataExt;
-                if !seen_files.insert((metadata.dev(), metadata.ino())) {
-                    return None;
-                }
-            }
+    for entry in WalkDir::new(storage).into_iter().flatten() {
+        if !entry.file_type().is_file() {
+            continue;
+        }
 
-            Some(metadata.len())
-        })
-        .sum()
-}
+        let metadata = match entry.metadata() {
+            Ok(metadata) => metadata,
+            Err(_) => continue,
+        };
 
-fn directory_size_excluding(path: &Path, excluded_roots: &[&str]) -> u64 {
-    #[cfg(unix)]
-    let mut seen_files = HashSet::new();
-    WalkDir::new(path)
-        .into_iter()
-        .flatten()
-        .filter(|entry| {
-            entry
-                .path()
-                .strip_prefix(path)
-                .ok()
-                .and_then(|relative| relative.components().next())
-                .and_then(|component| component.as_os_str().to_str())
-                .map(|root| !excluded_roots.contains(&root))
-                .unwrap_or(true)
-        })
-        .filter(|entry| entry.file_type().is_file())
-        .filter_map(|entry| {
-            let metadata = entry.metadata().ok()?;
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::MetadataExt;
-                if !seen_files.insert((metadata.dev(), metadata.ino())) {
-                    return None;
-                }
-            }
-            Some(metadata.len())
-        })
-        .sum()
-}
-
-fn clear_webview_cache(storage: &Path) {
-    for directory in ["WebKitCache", "CacheStorage"] {
-        let _ = fs::remove_dir_all(storage.join(directory));
-    }
-}
-
-fn clear_webview_cookies(storage: &Path) {
-    if let Ok(entries) = fs::read_dir(storage) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .map(|name| name == "cookies" || name.starts_with("cookies-"))
-                .unwrap_or(false)
-            {
-                let _ = fs::remove_file(path);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            if !seen_files.insert((metadata.dev(), metadata.ino())) {
+                continue;
             }
         }
+
+        if is_inside_cache(storage, entry.path()) {
+            sizes.cache += metadata.len();
+        } else {
+            sizes.data += metadata.len();
+        }
     }
+
+    sizes
+}
+
+fn clear_webview_cache(storage: &Path) -> bool {
+    if !storage.exists() {
+        return true;
+    }
+
+    let mut directories = Vec::new();
+    let mut cache_files = Vec::new();
+    for entry in WalkDir::new(storage).into_iter().flatten() {
+        if entry.depth() == 0 {
+            continue;
+        }
+        if entry.file_type().is_dir() && is_cache_directory(entry.path()) {
+            directories.push(entry.path().to_path_buf());
+        } else if entry.file_type().is_file() && is_cache_directory(entry.path()) {
+            cache_files.push(entry.path().to_path_buf());
+        }
+    }
+
+    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+    let mut success = true;
+    for path in directories {
+        if path.exists() && fs::remove_dir_all(path).is_err() {
+            success = false;
+        }
+    }
+    for path in cache_files {
+        if path.exists() && fs::remove_file(path).is_err() {
+            success = false;
+        }
+    }
+    success
+}
+
+fn clear_webview_cookies(storage: &Path) -> bool {
+    if !storage.exists() {
+        return true;
+    }
+
+    let paths: Vec<PathBuf> = WalkDir::new(storage)
+        .into_iter()
+        .flatten()
+        .filter(|entry| entry.file_type().is_file() && is_cookie_file(entry.path()))
+        .map(|entry| entry.path().to_path_buf())
+        .collect();
+
+    let mut success = true;
+    for path in paths {
+        if path.exists() && fs::remove_file(path).is_err() {
+            success = false;
+        }
+    }
+    success
 }
 
 #[derive(Serialize)]
