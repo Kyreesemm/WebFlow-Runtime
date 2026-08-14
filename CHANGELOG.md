@@ -23,3 +23,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minor issues with the manager's web interface have been fixed.
 - Fixed code compilation for Windows.
 - Fixed an issue with displaying application icons in the manager.
+- Fixed the icons of individual application windows.
