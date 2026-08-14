@@ -3194,6 +3194,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "clap",
+ "gtk",
  "mime_guess",
  "open",
  "rfd",
@@ -3203,6 +3204,7 @@ dependencies = [
  "tao",
  "tempfile",
  "walkdir",
+ "webkit2gtk",
  "wry",
 ]
 

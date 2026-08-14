@@ -16,6 +16,13 @@ fn main() {
         if std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err() {
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
         }
+
+        // Some WebKitGTK/GPU combinations terminate the web process when
+        // video playback starts. Software compositing keeps the app process
+        // alive and can still play video, with a small rendering trade-off.
+        if std::env::var("WEBKIT_DISABLE_COMPOSITING_MODE").is_err() {
+            std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        }
         
         // Force native Wayland backend (remove X11 fallback)
         if std::env::var("GDK_BACKEND").is_err() {

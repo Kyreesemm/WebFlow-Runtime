@@ -305,7 +305,19 @@ impl Config {
         }
         #[cfg(not(target_os = "windows"))]
         {
-            Path::new(&format!("/proc/{}", pid)).exists()
+            let proc_dir = format!("/proc/{}", pid);
+            if !Path::new(&proc_dir).exists() {
+                return false;
+            }
+
+            // A terminated child may remain as a zombie briefly. It is not a
+            // running application and must not keep the manager status green.
+            if let Ok(stat) = fs::read_to_string(format!("{}/stat", proc_dir)) {
+                if let Some(state) = stat.rsplit_once(") ").and_then(|(_, rest)| rest.chars().next()) {
+                    return state != 'Z';
+                }
+            }
+            true
         }
     }
 }
