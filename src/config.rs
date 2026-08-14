@@ -85,11 +85,11 @@ pub struct EngineSettings {
     pub autostart: bool,
     #[serde(default)]
     pub minimize_to_tray: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub app_tray_icons: bool,
     #[serde(default)]
     pub tray_apps_menu: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub google_oauth_fallback: bool,
 }
 
@@ -99,9 +99,9 @@ impl Default for EngineSettings {
             userdata_path: None,
             autostart: false,
             minimize_to_tray: false,
-            app_tray_icons: true,
+            app_tray_icons: false,
             tray_apps_menu: false,
-            google_oauth_fallback: true,
+            google_oauth_fallback: false,
         }
     }
 }

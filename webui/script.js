@@ -1122,13 +1122,13 @@ async function loadEngineSettings() {
         if (trayElem) trayElem.checked = !!settings.minimize_to_tray;
 
         const appTrayElem = document.getElementById('setting-app-tray-icons');
-        if (appTrayElem) appTrayElem.checked = settings.app_tray_icons !== false; // true по умолчанию
+        if (appTrayElem) appTrayElem.checked = false;
 
         const trayAppsMenuElem = document.getElementById('setting-tray-apps-menu');
-        if (trayAppsMenuElem) trayAppsMenuElem.checked = !!settings.tray_apps_menu;
+        if (trayAppsMenuElem) trayAppsMenuElem.checked = false;
 
         const googleOauthFallbackElem = document.getElementById('setting-google-oauth-fallback');
-        if (googleOauthFallbackElem) googleOauthFallbackElem.checked = settings.google_oauth_fallback !== false;
+        if (googleOauthFallbackElem) googleOauthFallbackElem.checked = false;
 
         document.getElementById('userdata-path').value = settings.current_userdata_path || '';
         document.getElementById('apps-path').textContent = settings.current_apps_path || '';
