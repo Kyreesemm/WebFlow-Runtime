@@ -172,32 +172,40 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         }, 2000);
         "#,
     );
-    if config.custom_scrollbar {
-        init_script.push_str(
-            r#"
-            (function() {
+
+    init_script.push_str(
+        r#"
+        window.__webflowRuntimeAddStyle = function(css) {
+            const install = function() {
                 const style = document.createElement('style');
-                style.textContent = `
-                    ::-webkit-scrollbar { width: 8px; height: 8px; }
-                    ::-webkit-scrollbar-track { background: #1e1e1e; }
-                    ::-webkit-scrollbar-thumb { background: #424242; border-radius: 4px; }
-                    ::-webkit-scrollbar-thumb:hover { background: #616161; }
-                `;
-                document.documentElement.appendChild(style);
-            })();
-            "#,
-        );
+                style.textContent = css;
+                (document.head || document.documentElement).appendChild(style);
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', install, { once: true });
+            } else {
+                install();
+            }
+        };
+        "#,
+    );
+
+    if config.custom_scrollbar {
+        let scrollbar_css = r#"
+            *::-webkit-scrollbar { width: 8px !important; height: 8px !important; }
+            *::-webkit-scrollbar-track { background: #1e1e1e !important; }
+            *::-webkit-scrollbar-thumb { background: #424242 !important; border-radius: 4px !important; }
+            *::-webkit-scrollbar-thumb:hover { background: #616161 !important; }
+        "#;
+        init_script.push_str(&format!(
+            "window.__webflowRuntimeAddStyle({});",
+            serde_json::to_string(scrollbar_css).unwrap_or_default()
+        ));
     }
     if let Some(ref css) = config.custom_css {
         if !css.trim().is_empty() {
             init_script.push_str(&format!(
-                r#"
-                (function() {{
-                    const style = document.createElement('style');
-                    style.textContent = {};
-                    document.documentElement.appendChild(style);
-                }})();
-                "#,
+                "window.__webflowRuntimeAddStyle({});",
                 serde_json::to_string(css).unwrap_or_default()
             ));
         }

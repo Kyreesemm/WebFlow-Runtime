@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The logic of working with memory in all usage scenarios has been changed.
 
 ### Fixed
+- Fixed custom scrollbar styles not being applied to launched applications on Linux and Windows.
 - Fixed incomplete English localization of the Engine Settings tab, folder controls, and language switcher tooltip.
 - Added minimum and maximum window size limits for the manager and applications on Linux and Windows.
 - Fixed the WebFlow Runtime Manager window icon on Linux Wayland sessions by using the working XWayland fallback when available.
