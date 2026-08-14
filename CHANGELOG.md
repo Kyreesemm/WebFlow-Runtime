@@ -8,25 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Returned support for tray icons and minimization without closing the manager.
-- The icon for the executable file has been returned.
 
 ### Changed
-- A FUNDAMENTAL CHANGE: The project has been completely rewritten in the Rust language.
-- Updated CLI command arguments and interactive option handling.
 - The logic of working with memory in all usage scenarios has been changed.
-- Some of the manager's functions are now temporarily unavailable.
 
 ### Fixed
-- Fixed minor UI bugs in WebFlow Runtime Manager.
 - Resolved rendering lifecycle issues and improved engine performance and resource efficiency.
-- The recalculation of the cache and application data in the manager has been fixed.
-- Fixed a problem with displaying cookies sizes and data.
-- Fixed issues with displaying and selecting User-Agents.
-- Fixed the incorrect operation of cleaning the shared storage.
-- Minor issues with the manager's web interface have been fixed.
-- Fixed code compilation for Windows.
-- Fixed an issue with displaying application icons in the manager.
-- Fixed the icons of individual application windows.
-- Minor issues preventing the project from being built for Windows have been fixed.
 - Minor bugs have been fixed in the Windows version.
+
+---
+
+## [v0.1.0-dev] - August 14th, 2026
+
+### Added
+- Added system tray support and manager minimization without closing the process.
+- Added the WebFlow Runtime Manager executable icon for Linux and Windows.
+
+### Changed
+- The project was completely rewritten from Python to Rust.
+- Updated CLI command arguments and interactive option handling.
+- Some manager functions are temporarily unavailable.
+
+### Fixed
+- Fixed minor UI issues in WebFlow Runtime Manager.
+- Fixed recalculation and display of cache and application data sizes.
+- Fixed display of cookie sizes and storage data.
+- Fixed User-Agent display and selection.
+- Fixed shared storage cleanup so cache and cookies are removed independently.
+- Fixed application icon display in the manager and individual application windows.
+- Fixed Windows compilation and related Windows build issues.

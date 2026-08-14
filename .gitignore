@@ -3,6 +3,7 @@
 
 /old-webflow
 /win-release
+/releases
 
 .vscode/
 .idea/
