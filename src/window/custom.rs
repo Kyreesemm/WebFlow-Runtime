@@ -14,6 +14,8 @@ impl CustomWindowFactory {
         let mut builder = WindowBuilder::new()
             .with_title(&options.title)
             .with_inner_size(LogicalSize::new(options.width, options.height))
+            .with_min_inner_size(LogicalSize::new(options.min_width, options.min_height))
+            .with_max_inner_size(LogicalSize::new(options.max_width, options.max_height))
             .with_resizable(options.resizable)
             .with_decorations(false)
             .with_transparent(true)

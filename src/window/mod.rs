@@ -14,6 +14,13 @@ pub enum WindowFrameStyle {
     Custom,
 }
 
+pub const APP_MIN_WIDTH: u32 = 700;
+pub const APP_MIN_HEIGHT: u32 = 480;
+pub const MANAGER_MIN_WIDTH: u32 = 800;
+pub const MANAGER_MIN_HEIGHT: u32 = 480;
+pub const MAX_WINDOW_WIDTH: u32 = 7680;
+pub const MAX_WINDOW_HEIGHT: u32 = 4320;
+
 #[allow(dead_code)]
 pub struct WindowOptions {
     pub title: String,
@@ -24,6 +31,10 @@ pub struct WindowOptions {
     pub debug: bool,
     pub position: Option<(i32, i32)>,
     pub icon: Option<Icon>,
+    pub min_width: u32,
+    pub min_height: u32,
+    pub max_width: u32,
+    pub max_height: u32,
 }
 
 impl Default for WindowOptions {
@@ -37,6 +48,10 @@ impl Default for WindowOptions {
             debug: false,
             position: None,
             icon: None,
+            min_width: APP_MIN_WIDTH,
+            min_height: APP_MIN_HEIGHT,
+            max_width: MAX_WINDOW_WIDTH,
+            max_height: MAX_WINDOW_HEIGHT,
         }
     }
 }

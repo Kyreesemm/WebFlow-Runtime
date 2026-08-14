@@ -5,7 +5,7 @@ pub mod webui;
 use crate::tray::{ManagerTray, EXIT_ID, SHOW_ID};
 use crate::window::{
     apply_window_icon, build_webview, load_window_icon_bytes, WindowFactory, WindowFrameStyle,
-    WindowOptions,
+    WindowOptions, MANAGER_MIN_HEIGHT, MANAGER_MIN_WIDTH, MAX_WINDOW_HEIGHT, MAX_WINDOW_WIDTH,
 };
 use serde_json::{json, Value};
 use std::fs;
@@ -152,6 +152,10 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
         debug,
         position,
         icon: load_window_icon_bytes(MANAGER_ICON_BYTES),
+        min_width: MANAGER_MIN_WIDTH,
+        min_height: MANAGER_MIN_HEIGHT,
+        max_width: MAX_WINDOW_WIDTH,
+        max_height: MAX_WINDOW_HEIGHT,
     };
 
     let factory = WindowFactory::new(WindowFrameStyle::System);

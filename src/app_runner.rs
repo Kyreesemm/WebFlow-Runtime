@@ -1,5 +1,8 @@
 use crate::config::{AppConfig, Config};
-use crate::window::{apply_window_icon, build_webview, load_window_icon, WindowFactory, WindowFrameStyle, WindowOptions};
+use crate::window::{
+    apply_window_icon, build_webview, load_window_icon, WindowFactory, WindowFrameStyle,
+    WindowOptions, APP_MIN_HEIGHT, APP_MIN_WIDTH, MAX_WINDOW_HEIGHT, MAX_WINDOW_WIDTH,
+};
 use tao::event_loop::{ControlFlow, EventLoop};
 use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -102,13 +105,23 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     let factory = WindowFactory::new(frame_style);
     let options = WindowOptions {
         title: config.window.title.clone(),
-        width: config.window.width,
-        height: config.window.height,
+        width: config
+            .window
+            .width
+            .clamp(APP_MIN_WIDTH, MAX_WINDOW_WIDTH),
+        height: config
+            .window
+            .height
+            .clamp(APP_MIN_HEIGHT, MAX_WINDOW_HEIGHT),
         resizable: config.window.resizable,
         frame_style,
         debug,
         position: None,
         icon: load_window_icon(&icon_path),
+        min_width: APP_MIN_WIDTH,
+        min_height: APP_MIN_HEIGHT,
+        max_width: MAX_WINDOW_WIDTH,
+        max_height: MAX_WINDOW_HEIGHT,
     };
     let window = factory.create_window(&event_loop, &options)?;
 
