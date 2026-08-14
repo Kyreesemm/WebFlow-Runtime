@@ -11,12 +11,59 @@ use serde_json::{json, Value};
 use std::fs;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tao::event_loop::{ControlFlow, EventLoop};
+use tao::event_loop::ControlFlow;
 use tao::window::Window;
 use tray_icon::menu::MenuEvent;
 use wry::{WebView, WebViewBuilder};
 
 const MANAGER_ICON_BYTES: &[u8] = include_bytes!("../../materials/default/webflow_runtime_icon.png");
+#[cfg(target_os = "linux")]
+const MANAGER_APP_ID: &str = "com.webflow.runtime.manager";
+
+#[cfg(target_os = "linux")]
+fn prepare_manager_desktop_entry(icon_path: &std::path::Path) {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let data_home = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share")));
+    let Some(data_home) = data_home else {
+        return;
+    };
+
+    let applications_dir = data_home.join("applications");
+    let _ = fs::create_dir_all(&applications_dir);
+    let Ok(executable) = std::env::current_exe() else {
+        return;
+    };
+    let escape = |value: &str| value.replace('\\', "\\\\").replace('"', "\\\"");
+    let desktop_entry = format!(
+        "[Desktop Entry]\nType=Application\nName=WebFlow Runtime Manager\nExec=\"{}\"\nIcon={}\nNoDisplay=true\nTerminal=false\nStartupNotify=true\n",
+        escape(&executable.to_string_lossy()),
+        icon_path.to_string_lossy()
+    );
+    let _ = fs::write(
+        applications_dir.join(format!("{}.desktop", MANAGER_APP_ID)),
+        desktop_entry,
+    );
+}
+
+#[cfg(target_os = "linux")]
+fn configure_manager_window_backend() {
+    let is_wayland_session = std::env::var("XDG_SESSION_TYPE")
+        .map(|value| value.eq_ignore_ascii_case("wayland"))
+        .unwrap_or(false);
+    let has_xwayland = std::env::var_os("DISPLAY").is_some();
+
+    // GTK3 cannot reliably provide per-window icons through native Wayland.
+    // Use XWayland when available, matching the already working app-window
+    // path; retain native Wayland as a fallback for systems without XWayland.
+    if is_wayland_session && has_xwayland {
+        std::env::set_var("GDK_BACKEND", "x11");
+        std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+    }
+}
 
 fn load_manager_geometry() -> (u32, u32, Option<(i32, i32)>) {
     let path = crate::config::Config::get_config_dir().join("window_state.json");
@@ -72,12 +119,29 @@ fn save_manager_geometry(window: &Window) {
 }
 
 pub fn run_manager(debug: bool) -> Result<(), String> {
-    let event_loop = EventLoop::new();
     let (width, height, position) = load_manager_geometry();
     let icon_path = crate::config::Config::get_base_dir()
         .join("materials")
         .join("default")
         .join("webflow_runtime_icon.png");
+
+    #[cfg(target_os = "linux")]
+    prepare_manager_desktop_entry(&icon_path);
+
+    #[cfg(target_os = "linux")]
+    configure_manager_window_backend();
+
+    #[cfg(target_os = "linux")]
+    let event_loop = {
+        use tao::event_loop::EventLoopBuilder;
+        use tao::platform::unix::EventLoopBuilderExtUnix;
+
+        let mut builder = EventLoopBuilder::new();
+        builder.with_app_id(MANAGER_APP_ID);
+        builder.build()
+    };
+    #[cfg(not(target_os = "linux"))]
+    let event_loop = tao::event_loop::EventLoop::new();
 
     let options = WindowOptions {
         title: "WebFlow Runtime Manager".to_string(),

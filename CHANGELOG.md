@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The logic of working with memory in all usage scenarios has been changed.
 
 ### Fixed
+- Fixed the WebFlow Runtime Manager window icon on Linux Wayland sessions by using the working XWayland fallback when available.
+- Fixed Windows executable icon resource embedding for native Windows builds.
 - Resolved rendering lifecycle issues and improved engine performance and resource efficiency.
 - Minor bugs have been fixed in the Windows version.
 

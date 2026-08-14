@@ -24,8 +24,13 @@ fn main() {
     println!("cargo:rerun-if-changed=materials");
     println!("cargo:rerun-if-changed=webflow-runtime.rc");
 
-    if env::var_os("CARGO_CFG_WINDOWS").is_some() {
-        let _ = embed_resource::compile("webflow-runtime.rc", embed_resource::NONE);
+    if env::var("TARGET")
+        .map(|target| target.contains("-windows-"))
+        .unwrap_or(false)
+    {
+        embed_resource::compile("webflow-runtime.rc", embed_resource::NONE)
+            .manifest_optional()
+            .unwrap();
     }
 
     let source = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("materials");
