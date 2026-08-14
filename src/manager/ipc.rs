@@ -4,6 +4,7 @@ use serde_json::Value;
 #[cfg(unix)]
 use std::collections::HashSet;
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
@@ -270,8 +271,10 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
         "clearAppCache" | "clearAppData" => {
             if let Some(app_id) = args.get(0).and_then(|v| v.as_str()) {
                 let storage = Config::get_apps_dir().join(app_id).join("storage");
-                if storage.exists() {
-                    let _ = fs::remove_dir_all(storage);
+                if cmd == "clearAppCache" {
+                    clear_webview_cache(&storage);
+                } else {
+                    clear_webview_cookies(&storage);
                 }
                 send_response(&webview_handle, id, "true");
             } else {
@@ -283,21 +286,33 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             if let Ok(entries) = fs::read_dir(apps_dir) {
                 for entry in entries.flatten() {
                     let storage = entry.path().join("storage");
-                    if storage.exists() {
-                        let _ = fs::remove_dir_all(storage);
+                    if cmd == "clearAllCache" {
+                        clear_webview_cache(&storage);
+                    } else {
+                        clear_webview_cookies(&storage);
                     }
                 }
             }
             let shared = Config::get_shared_storage_dir();
-            if shared.exists() {
-                let _ = fs::remove_dir_all(&shared);
+            if cmd == "clearAllCache" {
+                clear_webview_cache(&shared);
+            } else {
+                clear_webview_cookies(&shared);
             }
             send_response(&webview_handle, id, "true");
         }
-        "getTotalCacheSize" | "getTotalDataSize" => {
-            // Both values are scoped to the shared WebView storage. Private
-            // app storage is shown on its own application card instead.
-            let formatted = format_size(directory_size(&Config::get_shared_storage_dir()));
+        "getTotalCacheSize" => {
+            let shared = Config::get_shared_storage_dir();
+            let total = directory_size(&shared.join("WebKitCache"))
+                + directory_size(&shared.join("CacheStorage"));
+            let formatted = format_size(total);
+            send_response(&webview_handle, id, &formatted);
+        }
+        "getTotalDataSize" => {
+            // Data excludes the two cache trees shown by getTotalCacheSize.
+            let shared = Config::get_shared_storage_dir();
+            let total = directory_size_excluding(&shared, &["WebKitCache", "CacheStorage"]);
+            let formatted = format_size(total);
             send_response(&webview_handle, id, &formatted);
         }
         "getAppStorageSizes" => {
@@ -384,6 +399,58 @@ fn directory_size(path: &std::path::Path) -> u64 {
             Some(metadata.len())
         })
         .sum()
+}
+
+fn directory_size_excluding(path: &Path, excluded_roots: &[&str]) -> u64 {
+    let mut seen_files = HashSet::new();
+    WalkDir::new(path)
+        .into_iter()
+        .flatten()
+        .filter(|entry| {
+            entry
+                .path()
+                .strip_prefix(path)
+                .ok()
+                .and_then(|relative| relative.components().next())
+                .and_then(|component| component.as_os_str().to_str())
+                .map(|root| !excluded_roots.contains(&root))
+                .unwrap_or(true)
+        })
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| {
+            let metadata = entry.metadata().ok()?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                if !seen_files.insert((metadata.dev(), metadata.ino())) {
+                    return None;
+                }
+            }
+            Some(metadata.len())
+        })
+        .sum()
+}
+
+fn clear_webview_cache(storage: &Path) {
+    for directory in ["WebKitCache", "CacheStorage"] {
+        let _ = fs::remove_dir_all(storage.join(directory));
+    }
+}
+
+fn clear_webview_cookies(storage: &Path) {
+    if let Ok(entries) = fs::read_dir(storage) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .map(|name| name == "cookies" || name.starts_with("cookies-"))
+                .unwrap_or(false)
+            {
+                let _ = fs::remove_file(path);
+            }
+        }
+    }
 }
 
 #[derive(Serialize)]

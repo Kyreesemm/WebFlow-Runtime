@@ -16,3 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed minor UI bugs in WebFlow Runtime Manager.
 - Resolved rendering lifecycle issues and improved engine performance and resource efficiency.
 - The recalculation of the cache and application data in the manager has been fixed.
+- Fixed a problem with displaying cookies sizes and data.
+- Fixed issues with displaying and selecting User-Agents.
