@@ -419,6 +419,7 @@ fn directory_size(path: &std::path::Path) -> u64 {
 }
 
 fn directory_size_excluding(path: &Path, excluded_roots: &[&str]) -> u64 {
+    #[cfg(unix)]
     let mut seen_files = HashSet::new();
     WalkDir::new(path)
         .into_iter()
