@@ -475,6 +475,38 @@
         </div>
     </div>
 
+    <div id="userdata-change-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 data-i18n="userdata_change_title">Смена папки userdata</h2>
+                <button class="close-btn" onclick="closeUserdataChangeModal(false)">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="userdata_change_message">Вы уверены, что хотите сменить папку пользовательских данных?</p>
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="userdata-transfer" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="toggle-label" for="userdata-transfer" data-i18n="userdata_transfer">Перенести пользовательские данные в новую папку</label>
+                </div>
+                <div class="toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="userdata-delete-old">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label class="toggle-label" for="userdata-delete-old" data-i18n="userdata_delete_old">Удалить старую папку</label>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeUserdataChangeModal(false)" data-i18n="cancel">Отмена</button>
+                <button type="button" class="btn" onclick="closeUserdataChangeModal(true)" data-i18n="save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <div id="import-cookies-modal" class="modal">
         <div class="modal-content modal-small">
             <div class="modal-header">

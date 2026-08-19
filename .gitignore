@@ -5,6 +5,7 @@
 /win-release
 /releases
 /no-public
+AGENTS.md
 
 .vscode/
 .idea/

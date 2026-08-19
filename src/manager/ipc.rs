@@ -193,19 +193,42 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
         }
         "updateEngineSettings" => {
             if let Some(val) = args.get(0) {
-                let settings: Result<EngineSettings, _> = if val.is_string() {
+                let incoming: Result<Value, _> = if val.is_string() {
                     serde_json::from_str(val.as_str().unwrap_or(""))
                 } else {
-                    serde_json::from_value(val.clone())
+                    Ok(val.clone())
                 };
 
-                if let Ok(st) = settings {
-                    let _ = Config::save_engine_settings(&st);
-                    send_response(&webview_handle, id, "true");
-                    return;
+                if let Ok(incoming) = incoming {
+                    let mut merged = serde_json::to_value(Config::load_engine_settings())
+                        .unwrap_or_else(|_| serde_json::json!({}));
+                    if let (Some(current), Some(incoming)) = (merged.as_object_mut(), incoming.as_object()) {
+                        for (key, value) in incoming {
+                            current.insert(key.clone(), value.clone());
+                        }
+                    }
+                    let settings: Result<EngineSettings, _> = serde_json::from_value(merged);
+                    if let Ok(st) = settings {
+                        let _ = Config::save_engine_settings(&st);
+                        send_response(&webview_handle, id, "true");
+                        return;
+                    }
                 }
             }
             send_response(&webview_handle, id, "false");
+        }
+        "changeUserdataPath" => {
+            let new_path = args.get(0).and_then(|v| v.as_str());
+            let transfer_data = args.get(1).and_then(|v| v.as_bool()).unwrap_or(true);
+            let delete_old = args.get(2).and_then(|v| v.as_bool()).unwrap_or(false);
+            let result = new_path
+                .ok_or_else(|| "Не указан новый путь".to_string())
+                .and_then(|path| Config::change_userdata_path(path, transfer_data, delete_old));
+            let response = match result {
+                Ok(()) => serde_json::json!({"success": true}),
+                Err(error) => serde_json::json!({"success": false, "error": error}),
+            };
+            send_response(&webview_handle, id, &response.to_string());
         }
         "listUserAgents" => {
             let mut uas = vec![

@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
-#[cfg(not(target_os = "windows"))]
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowConfig {
@@ -266,8 +264,76 @@ impl Config {
 
     pub fn save_engine_settings(settings: &EngineSettings) -> Result<(), String> {
         let path = Self::get_config_dir().join("engine_settings.json");
+        Self::save_engine_settings_at(&path, settings)
+    }
+
+    fn save_engine_settings_at(path: &Path, settings: &EngineSettings) -> Result<(), String> {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
         let json = serde_json::to_string_pretty(settings).map_err(|e| e.to_string())?;
         fs::write(path, json).map_err(|e| e.to_string())
+    }
+
+    /// Changes the userdata root, optionally copying its contents and/or
+    /// removing the old root after the new settings have been written.
+    pub fn change_userdata_path(
+        new_path: &str,
+        transfer_data: bool,
+        delete_old: bool,
+    ) -> Result<(), String> {
+        let old_path = Self::get_userdata_base();
+        let new_path = PathBuf::from(new_path);
+
+        if new_path.as_os_str().is_empty() {
+            return Err("Путь к пользовательским данным не может быть пустым".into());
+        }
+        if new_path.exists() && !new_path.is_dir() {
+            return Err("Выбранный путь не является папкой".into());
+        }
+        fs::create_dir_all(&new_path).map_err(|e| format!("Не удалось создать новую папку: {}", e))?;
+
+        let old_canonical = fs::canonicalize(&old_path).map_err(|e| e.to_string())?;
+        let new_canonical = fs::canonicalize(&new_path).map_err(|e| e.to_string())?;
+        if old_canonical == new_canonical {
+            return Ok(());
+        }
+        if new_canonical.starts_with(&old_canonical) {
+            return Err("Новая папка не может находиться внутри старой папки".into());
+        }
+        if delete_old && (old_canonical.parent().is_none() || old_canonical == Self::get_base_dir()) {
+            return Err("Нельзя удалить системную папку пользовательских данных".into());
+        }
+
+        if transfer_data && old_path.exists() {
+            for entry in walkdir::WalkDir::new(&old_path).into_iter().flatten() {
+                let relative = entry.path().strip_prefix(&old_path).map_err(|e| e.to_string())?;
+                if relative.as_os_str().is_empty() {
+                    continue;
+                }
+                let target = new_path.join(relative);
+                if entry.file_type().is_dir() {
+                    fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+                } else if entry.file_type().is_file() {
+                    if let Some(parent) = target.parent() {
+                        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                    }
+                    fs::copy(entry.path(), &target).map_err(|e| {
+                        format!("Не удалось перенести {}: {}", entry.path().display(), e)
+                    })?;
+                }
+            }
+        }
+
+        let mut settings = Self::load_engine_settings();
+        settings.userdata_path = Some(new_path.to_string_lossy().to_string());
+        Self::save_engine_settings_at(&new_path.join("config").join("engine_settings.json"), &settings)?;
+
+        if delete_old {
+            fs::remove_dir_all(&old_path)
+                .map_err(|e| format!("Новая папка сохранена, но старую удалить не удалось: {}", e))?;
+        }
+        Ok(())
     }
 
     // PID Tracking

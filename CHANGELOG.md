@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added confirmation and data migration options when changing the userdata directory.
 
 ### Changed
 
 ### Fixed
+- Preserved existing engine settings when saving partial settings updates.
 - Prevented multiple WebFlow Runtime Manager processes and duplicate tray icons from being created.
 - Optimized Linux tray minimize/restore and close handling while keeping the manager WebView unloaded in the tray.
 - Fixed cross-platform cache and user-data size calculation and cleanup for isolated and shared WebView storage.

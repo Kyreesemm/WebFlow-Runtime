@@ -77,6 +77,11 @@ const translations = {
         reload_settings: 'Обновить',
         settings_saved: 'Настройки сохранены',
         error_saving: 'Ошибка сохранения',
+        userdata_change_title: 'Смена папки userdata',
+        userdata_change_message: 'Вы уверены, что хотите сменить папку пользовательских данных?',
+        userdata_transfer: 'Перенести пользовательские данные в новую папку',
+        userdata_delete_old: 'Удалить старую папку',
+        userdata_changed: 'Папка пользовательских данных изменена',
         confirm_title: 'Подтверждение',
         ok: 'OK',
         delete: 'Удалить',
@@ -178,6 +183,11 @@ const translations = {
         reload_settings: 'Refresh',
         settings_saved: 'Settings saved',
         error_saving: 'Error saving settings',
+        userdata_change_title: 'Change userdata folder',
+        userdata_change_message: 'Are you sure you want to change the user data folder?',
+        userdata_transfer: 'Transfer user data to the new folder',
+        userdata_delete_old: 'Delete the old folder',
+        userdata_changed: 'User data folder changed',
         confirm_title: 'Confirmation',
         ok: 'OK',
         delete: 'Delete',
@@ -503,6 +513,7 @@ function hideProgress() {
 }
 
 let confirmResolver = null;
+let userdataChangeResolver = null;
 
 function showNotification(message, type = 'success', duration = 3200) {
     const container = document.getElementById('notification-container');
@@ -540,6 +551,26 @@ function closeConfirmModal(accepted) {
         const resolver = confirmResolver;
         confirmResolver = null;
         resolver(Boolean(accepted));
+    }
+}
+
+function showUserdataChangeModal() {
+    const modal = document.getElementById('userdata-change-modal');
+    document.getElementById('userdata-transfer').checked = true;
+    document.getElementById('userdata-delete-old').checked = false;
+    modal.classList.add('active');
+    return new Promise(resolve => { userdataChangeResolver = resolve; });
+}
+
+function closeUserdataChangeModal(accepted) {
+    document.getElementById('userdata-change-modal').classList.remove('active', 'closing');
+    if (userdataChangeResolver) {
+        const resolver = userdataChangeResolver;
+        userdataChangeResolver = null;
+        resolver(accepted ? {
+            transferData: document.getElementById('userdata-transfer').checked,
+            deleteOld: document.getElementById('userdata-delete-old').checked
+        } : null);
     }
 }
 
@@ -896,7 +927,13 @@ async function deleteUserAgent(uaId) {
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', function(e) {
         if (e.target === this) {
-            this.classList.remove('active');
+            if (this.id === 'userdata-change-modal') {
+                closeUserdataChangeModal(false);
+            } else if (this.id === 'confirm-modal') {
+                closeConfirmModal(false);
+            } else {
+                this.classList.remove('active');
+            }
         }
     });
 });
@@ -1217,6 +1254,29 @@ async function saveEngineSettings() {
         }
 
         const userdataPath = document.getElementById('userdata-path').value;
+        const settingsJson = await new Promise(resolve => managerAPI.getEngineSettings(resolve));
+        const currentPath = JSON.parse(settingsJson).current_userdata_path || '';
+
+        if (userdataPath && userdataPath !== currentPath) {
+            const options = await showUserdataChangeModal();
+            if (!options) {
+                await loadEngineSettings();
+                return;
+            }
+
+            const resultJson = await new Promise(resolve => {
+                managerAPI.changeUserdataPath(userdataPath, options.transferData, options.deleteOld, resolve);
+            });
+            const result = JSON.parse(resultJson || '{}');
+            if (!result.success) {
+                await loadEngineSettings();
+                showNotification(result.error || translations[currentLang].error_saving, 'error');
+                return;
+            }
+            showNotification(translations[currentLang].userdata_changed, 'success');
+            setTimeout(() => loadEngineSettings(), 300);
+            return;
+        }
 
         const settings = {
             userdata_path: userdataPath
