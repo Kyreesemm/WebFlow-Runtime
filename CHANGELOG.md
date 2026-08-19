@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [v0.1.2-dev] - August 20th, 2026
+
+### Added
 - Added confirmation and data migration options when changing the userdata directory.
 - Added a stable userdata bootstrap configuration so all derived paths follow the active directory.
 
