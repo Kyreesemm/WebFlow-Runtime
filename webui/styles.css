@@ -827,6 +827,20 @@ body.theme-transitioning * {
     margin-bottom: 20px;
 }
 
+.toggle-label {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.userdata-change-modal-content {
+    max-width: 620px;
+}
+
+.userdata-change-modal-content .toggle-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 .toggle-switch {
     position: relative;
     display: inline-block;

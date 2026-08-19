@@ -129,23 +129,26 @@ impl Config {
     }
 
     pub fn get_userdata_base() -> PathBuf {
-        // Check engine settings for custom userdata_path
-        let config_dir = Self::get_base_dir().join("userdata").join("config");
-        let settings_file = config_dir.join("engine_settings.json");
-        if settings_file.exists() {
-            if let Ok(content) = fs::read_to_string(&settings_file) {
+        let base_dir = Self::get_base_dir();
+        let settings_files = [
+            base_dir.join("engine_settings.json"),
+            base_dir.join("userdata").join("config").join("engine_settings.json"),
+        ];
+
+        for settings_file in settings_files {
+            if let Ok(content) = fs::read_to_string(settings_file) {
                 if let Ok(st) = serde_json::from_str::<EngineSettings>(&content) {
-                    if let Some(ref path) = st.userdata_path {
-                        let p = PathBuf::from(path);
-                        if p.exists() || fs::create_dir_all(&p).is_ok() {
-                            return p;
+                    if let Some(path) = st.userdata_path {
+                        let path = PathBuf::from(path);
+                        if path.exists() || fs::create_dir_all(&path).is_ok() {
+                            return path;
                         }
                     }
                 }
             }
         }
 
-        let base = Self::get_base_dir().join("userdata");
+        let base = base_dir.join("userdata");
         let _ = fs::create_dir_all(&base);
         base
     }
@@ -264,7 +267,8 @@ impl Config {
 
     pub fn save_engine_settings(settings: &EngineSettings) -> Result<(), String> {
         let path = Self::get_config_dir().join("engine_settings.json");
-        Self::save_engine_settings_at(&path, settings)
+        Self::save_engine_settings_at(&path, settings)?;
+        Self::save_engine_settings_at(&Self::get_base_dir().join("engine_settings.json"), settings)
     }
 
     fn save_engine_settings_at(path: &Path, settings: &EngineSettings) -> Result<(), String> {
@@ -328,6 +332,7 @@ impl Config {
         let mut settings = Self::load_engine_settings();
         settings.userdata_path = Some(new_path.to_string_lossy().to_string());
         Self::save_engine_settings_at(&new_path.join("config").join("engine_settings.json"), &settings)?;
+        Self::save_engine_settings_at(&Self::get_base_dir().join("engine_settings.json"), &settings)?;
 
         if delete_old {
             fs::remove_dir_all(&old_path)

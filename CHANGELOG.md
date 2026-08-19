@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added confirmation and data migration options when changing the userdata directory.
+- Added a stable userdata bootstrap configuration so all derived paths follow the active directory.
 
 ### Changed
 
 ### Fixed
+- Fixed derived userdata paths and folder-opening actions continuing to use the previous directory after migration.
+- Fixed the userdata migration dialog layout at the manager's minimum window size.
 - Preserved existing engine settings when saving partial settings updates.
 - Prevented multiple WebFlow Runtime Manager processes and duplicate tray icons from being created.
 - Optimized Linux tray minimize/restore and close handling while keeping the manager WebView unloaded in the tray.
