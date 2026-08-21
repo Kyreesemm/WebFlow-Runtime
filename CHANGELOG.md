@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The descriptions of some functions in the manager's interface have been minimally changed
 
 ### Fixed
+- Fixed the startup-minimized option availability to follow both manager autostart and tray minimization settings.
+- Added the manager icon to the Linux desktop autostart entry.
 - Fixed `engine_settings.json` being duplicated in the application root on Windows.
 - Disabled manager tray minimization on GNOME Linux sessions and forced it off by default there.
 - Fixed new applications ignoring the default isolated storage setting.

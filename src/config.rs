@@ -322,9 +322,16 @@ impl Config {
                 fs::create_dir_all(&autostart_dir).map_err(|error| error.to_string())?;
                 let executable = std::env::current_exe().map_err(|error| error.to_string())?;
                 let executable = executable.to_string_lossy().replace('"', "\\\"");
+                let icon_path = Self::get_base_dir()
+                    .join("materials")
+                    .join("default")
+                    .join("webflow_runtime_icon.png")
+                    .to_string_lossy()
+                    .replace('\\', "\\\\")
+                    .replace(' ', "\\s");
                 let content = format!(
-                    "[Desktop Entry]\nType=Application\nName=WebFlow Runtime Manager\nExec=\"{}\" --autostart\nTerminal=false\nStartupNotify=true\nX-GNOME-Autostart-enabled=true\n",
-                    executable
+                    "[Desktop Entry]\nType=Application\nName=WebFlow Runtime Manager\nExec=\"{}\" --autostart\nIcon={}\nTerminal=false\nStartupNotify=true\nX-GNOME-Autostart-enabled=true\n",
+                    executable, icon_path
                 );
                 fs::write(entry_path, content).map_err(|error| error.to_string())
             }
