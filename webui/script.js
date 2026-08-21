@@ -42,7 +42,7 @@ const translations = {
         storage_mode: 'Режим хранилища',
         isolated_storage_desc: 'Каждое приложение использует отдельное хранилище куки и данных',
         data_management: 'Управление данными',
-        clear_cache: 'Очистить кеш всех приложений',
+        clear_cache: 'Очистить кэш всех приложений',
         clear_cookies: 'Очистить куки всех приложений',
         total_cache_size: 'Общий размер кэша:',
         total_data_size: 'Общий размер данных:',

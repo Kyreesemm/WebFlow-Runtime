@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Fixed storage cleanup buttons having different sizes and corrected the Russian cache label.
 - Fixed User-Agent strings overflowing their cards at the manager's minimum width.
 
 ## [v0.1.2-dev] - August 20th, 2026
