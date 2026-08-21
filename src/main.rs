@@ -36,6 +36,15 @@ fn main() {
 
     let args = CliArgs::parse();
 
+    #[cfg(target_os = "windows")]
+    if args.debug {
+        unsafe {
+            let _ = windows_sys::Win32::System::Console::AttachConsole(
+                windows_sys::Win32::System::Console::ATTACH_PARENT_PROCESS,
+            );
+        }
+    }
+
     // Pure CLI mode: List templates
     if args.list_templates {
         println!("Available templates / Доступные шаблоны:");

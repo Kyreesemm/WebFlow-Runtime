@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added detailed manager debug logging for UI events, IPC requests and responses, JavaScript errors, and backend timings.
 
 ### Changed
 

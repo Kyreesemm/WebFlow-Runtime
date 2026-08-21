@@ -122,6 +122,9 @@ fn save_manager_geometry(window: &Window) {
 }
 
 pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), String> {
+    if debug {
+        eprintln!("[WebFlow DEBUG][MANAGER] starting manager");
+    }
     let instance_lock = match ManagerInstanceLock::acquire() {
         Ok(lock) => lock,
         Err(error) if error.contains("already running") => {
@@ -317,14 +320,20 @@ fn create_webview(
     webview_handle: Arc<Mutex<Option<WebView>>>,
     debug: bool,
 ) -> Result<(), String> {
+    if debug {
+        eprintln!("[WebFlow DEBUG][WEBVIEW] creating manager WebView");
+    }
     let protocol = WebViewBuilder::new().with_custom_protocol("webflow".into(), move |_webview, req| {
         webui::handle_custom_protocol_request(req.uri().path())
     });
     let webview_clone = webview_handle.clone();
-    let mut builder = protocol
-        .with_initialization_script(bridge_js::INJECTED_BRIDGE_JS)
+    let mut builder = protocol.with_initialization_script(bridge_js::INJECTED_BRIDGE_JS);
+    if debug {
+        builder = builder.with_initialization_script(bridge_js::DEBUG_INJECTED_JS);
+    }
+    let mut builder = builder
         .with_ipc_handler(move |req| {
-            ipc::handle_ipc_message(webview_clone.clone(), req.body());
+            ipc::handle_ipc_message(webview_clone.clone(), req.body(), debug);
         })
         .with_url("webflow://manager/index.html");
 
@@ -334,5 +343,8 @@ fn create_webview(
 
     let webview = build_webview(builder, window)?;
     *webview_handle.lock().unwrap() = Some(webview);
+    if debug {
+        eprintln!("[WebFlow DEBUG][WEBVIEW] manager WebView created");
+    }
     Ok(())
 }

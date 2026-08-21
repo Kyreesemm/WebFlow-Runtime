@@ -75,3 +75,98 @@ pub const INJECTED_BRIDGE_JS: &str = r#"
     console.log("[WebFlow] Rust IPC Bridge initialized.");
 })();
 "#;
+
+pub const DEBUG_INJECTED_JS: &str = r#"
+(function() {
+    window.__WEBFLOW_DEBUG__ = true;
+
+    function debugToBackend(type, details) {
+        if (!window.ipc || !window.ipc.postMessage) return;
+        window.ipc.postMessage(JSON.stringify({
+            id: 0,
+            cmd: '__debug',
+            args: [{ type: type, details: details }]
+        }));
+    }
+
+    function describeElement(element) {
+        if (!element || !element.tagName) return null;
+        return {
+            tag: element.tagName.toLowerCase(),
+            id: element.id || null,
+            name: element.getAttribute('name') || null,
+            type: element.getAttribute('type') || null,
+            text: (element.innerText || element.textContent || '').trim().slice(0, 120),
+            value: typeof element.value === 'string' ? element.value.slice(0, 200) : null,
+            checked: typeof element.checked === 'boolean' ? element.checked : null
+        };
+    }
+
+    document.addEventListener('click', function(event) {
+        debugToBackend('ui.click', { element: describeElement(event.target) });
+    }, true);
+    document.addEventListener('change', function(event) {
+        debugToBackend('ui.change', { element: describeElement(event.target) });
+    }, true);
+    document.addEventListener('submit', function(event) {
+        debugToBackend('ui.submit', { element: describeElement(event.target) });
+    }, true);
+    window.addEventListener('error', function(event) {
+        debugToBackend('js.error', {
+            message: event.message,
+            source: event.filename,
+            line: event.lineno,
+            column: event.colno
+        });
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+        debugToBackend('js.unhandledrejection', { reason: String(event.reason) });
+    });
+    ['log', 'info', 'warn', 'error'].forEach(function(level) {
+        const original = console[level].bind(console);
+        console[level] = function(...args) {
+            debugToBackend('js.console', {
+                level: level,
+                messages: args.map(function(value) { return String(value).slice(0, 500); })
+            });
+            return original(...args);
+        };
+    });
+
+    const originalQWebChannel = window.QWebChannel;
+    if (originalQWebChannel) {
+        window.QWebChannel = function(transport, callback) {
+            return originalQWebChannel(transport, function(channel) {
+                const managerAPI = channel.objects.managerAPI;
+                Object.keys(managerAPI).forEach(function(methodName) {
+                    if (typeof managerAPI[methodName] !== 'function') return;
+                    const originalMethod = managerAPI[methodName];
+                    managerAPI[methodName] = function(...args) {
+                        const callbackIndex = args.length - 1;
+                        const callback = typeof args[callbackIndex] === 'function'
+                            ? args[callbackIndex]
+                            : null;
+                        const requestArgs = callback ? args.slice(0, callbackIndex) : args;
+                        debugToBackend('ipc.request', {
+                            id: null,
+                            command: methodName,
+                            args: requestArgs
+                        });
+                        if (callback) {
+                            args[callbackIndex] = function(data) {
+                                debugToBackend('ipc.response', {
+                                    command: methodName,
+                                    data: data
+                                });
+                                return callback(data);
+                            };
+                        }
+                        return originalMethod.apply(this, args);
+                    };
+                });
+                callback(channel);
+            });
+        };
+    }
+})();
+"#;

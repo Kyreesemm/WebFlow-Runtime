@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use walkdir::WalkDir;
 use wry::WebView;
 use base64::Engine;
@@ -20,7 +21,7 @@ pub struct IpcPayload {
     pub args: Vec<Value>,
 }
 
-pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &str) {
+pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &str, debug: bool) {
     let payload: IpcPayload = match serde_json::from_str(body) {
         Ok(p) => p,
         Err(e) => {
@@ -32,6 +33,20 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
     let id = payload.id;
     let cmd = payload.cmd.as_str();
     let args = payload.args;
+    let _trace = if debug {
+        Some(DebugRequest::new(id, cmd, body))
+    } else {
+        None
+    };
+
+    if cmd == "__debug" {
+        if debug {
+            if let Some(event) = args.first() {
+                eprintln!("[WebFlow DEBUG][UI] {}", debug_preview(&event.to_string()));
+            }
+        }
+        return;
+    }
 
     match cmd {
         "listApps" => {
@@ -419,6 +434,48 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             eprintln!("[IPC] Unknown command: {}", cmd);
             send_response(&webview_handle, id, "null");
         }
+    }
+}
+
+struct DebugRequest<'a> {
+    id: u64,
+    command: &'a str,
+    started: Instant,
+}
+
+impl<'a> DebugRequest<'a> {
+    fn new(id: u64, command: &'a str, body: &str) -> Self {
+        eprintln!(
+            "[WebFlow DEBUG][IPC] request id={} command={} payload={}",
+            id,
+            command,
+            debug_preview(body)
+        );
+        Self {
+            id,
+            command,
+            started: Instant::now(),
+        }
+    }
+}
+
+impl Drop for DebugRequest<'_> {
+    fn drop(&mut self) {
+        eprintln!(
+            "[WebFlow DEBUG][IPC] completed id={} command={} elapsed={}ms",
+            self.id,
+            self.command,
+            self.started.elapsed().as_millis()
+        );
+    }
+}
+
+fn debug_preview(value: &str) -> String {
+    let preview: String = value.chars().take(2000).collect();
+    if preview.chars().count() < value.chars().count() {
+        format!("{}... ({} bytes total)", preview, value.len())
+    } else {
+        preview
     }
 }
 
