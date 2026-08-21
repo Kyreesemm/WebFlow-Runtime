@@ -79,6 +79,8 @@ impl Default for AppConfig {
 pub struct EngineSettings {
     #[serde(default)]
     pub userdata_path: Option<String>,
+    #[serde(default = "default_true")]
+    pub isolated_storage: bool,
     #[serde(default)]
     pub autostart: bool,
     #[serde(default)]
@@ -95,6 +97,7 @@ impl Default for EngineSettings {
     fn default() -> Self {
         Self {
             userdata_path: None,
+            isolated_storage: true,
             autostart: false,
             minimize_to_tray: false,
             app_tray_icons: false,

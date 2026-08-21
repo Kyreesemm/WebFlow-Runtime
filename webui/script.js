@@ -1,5 +1,6 @@
 let managerAPI = null;
 window.currentImportedCookies = [];
+let defaultIsolatedStorage = true;
 
 // Переводы
 const translations = {
@@ -357,6 +358,7 @@ function saveFullWindowState() {
 new QWebChannel(qt.webChannelTransport, function(channel) {
     managerAPI = channel.objects.managerAPI;
     console.log('WebChannel connected');
+    loadEngineSettings();
     populateBuiltInUserAgents();
 
     // Подписываемся на сигнал изменения списка приложений
@@ -734,6 +736,7 @@ function showCreateModal() {
     document.getElementById('modal-title').textContent = translations[currentLang].create_app;
     document.getElementById('app-form').reset();
     document.getElementById('app-id').value = '';
+    document.getElementById('isolated-storage').checked = defaultIsolatedStorage;
     document.getElementById('icon-preview').style.display = 'none';
     window.currentImportedCookies = [];
     updateFileInputLabel();
@@ -1174,6 +1177,12 @@ async function loadEngineSettings() {
         const settings = JSON.parse(settingsJson);
 
         // Заполняем поля
+        const isolatedStorageElem = document.getElementById('setting-isolated-storage');
+        if (isolatedStorageElem) {
+            isolatedStorageElem.checked = settings.isolated_storage !== false;
+            defaultIsolatedStorage = isolatedStorageElem.checked;
+        }
+
         const autostartElem = document.getElementById('setting-autostart');
         if (autostartElem) autostartElem.checked = !!settings.autostart;
 
@@ -1216,6 +1225,10 @@ async function loadEngineSettings() {
             googleOauthFallbackElem.dataset.listener = 'true';
             googleOauthFallbackElem.addEventListener('change', saveGeneralSettings);
         }
+        if (isolatedStorageElem && !isolatedStorageElem.dataset.listener) {
+            isolatedStorageElem.dataset.listener = 'true';
+            isolatedStorageElem.addEventListener('change', saveGeneralSettings);
+        }
     } catch (error) {
         console.error('Error loading engine settings:', error);
     }
@@ -1229,10 +1242,13 @@ async function saveGeneralSettings() {
         const appTrayIcons = document.getElementById('setting-app-tray-icons')?.checked ?? true;
         const trayAppsMenu = document.getElementById('setting-tray-apps-menu')?.checked || false;
         const googleOauthFallback = document.getElementById('setting-google-oauth-fallback')?.checked ?? true;
+        const isolatedStorage = document.getElementById('setting-isolated-storage')?.checked ?? true;
+        defaultIsolatedStorage = isolatedStorage;
 
         const settings = {
-            autostart: autostart,
-            minimize_to_tray: minimizeToTray
+            autostart,
+            minimize_to_tray: minimizeToTray,
+            isolated_storage: isolatedStorage
         };
 
         await new Promise((resolve) => {
