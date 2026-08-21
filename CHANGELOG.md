@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- The descriptions of some functions in the manager's interface have been minimally changed
 
 ### Fixed
 - Fixed `engine_settings.json` being duplicated in the application root on Windows.
