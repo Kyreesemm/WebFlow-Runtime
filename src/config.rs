@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+#[cfg(target_os = "windows")]
+use std::ptr::{null, null_mut};
+#[cfg(target_os = "windows")]
+use std::os::windows::ffi::OsStrExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowConfig {
@@ -84,6 +88,8 @@ pub struct EngineSettings {
     #[serde(default)]
     pub autostart: bool,
     #[serde(default)]
+    pub start_minimized: bool,
+    #[serde(default)]
     pub minimize_to_tray: bool,
     #[serde(default)]
     pub app_tray_icons: bool,
@@ -99,6 +105,7 @@ impl Default for EngineSettings {
             userdata_path: None,
             isolated_storage: true,
             autostart: false,
+            start_minimized: false,
             minimize_to_tray: false,
             app_tray_icons: false,
             tray_apps_menu: false,
@@ -290,7 +297,121 @@ impl Config {
 
     pub fn save_engine_settings(settings: &EngineSettings) -> Result<(), String> {
         let path = Self::get_config_dir().join("engine_settings.json");
-        Self::save_engine_settings_at(&path, settings)
+        Self::save_engine_settings_at(&path, settings)?;
+        Self::sync_autostart(settings)
+    }
+
+    fn sync_autostart(settings: &EngineSettings) -> Result<(), String> {
+        #[cfg(target_os = "linux")]
+        {
+            let config_dir = std::env::var_os("XDG_CONFIG_HOME")
+                .map(PathBuf::from)
+                .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
+                .ok_or_else(|| "Unable to determine the user config directory".to_string())?;
+            let autostart_dir = config_dir.join("autostart");
+            let entry_path = autostart_dir.join("webflow-runtime-manager.desktop");
+
+            if !settings.autostart {
+                if let Err(error) = fs::remove_file(&entry_path) {
+                    if error.kind() != std::io::ErrorKind::NotFound {
+                        return Err(error.to_string());
+                    }
+                }
+                Ok(())
+            } else {
+                fs::create_dir_all(&autostart_dir).map_err(|error| error.to_string())?;
+                let executable = std::env::current_exe().map_err(|error| error.to_string())?;
+                let executable = executable.to_string_lossy().replace('"', "\\\"");
+                let content = format!(
+                    "[Desktop Entry]\nType=Application\nName=WebFlow Runtime Manager\nExec=\"{}\" --autostart\nTerminal=false\nStartupNotify=true\nX-GNOME-Autostart-enabled=true\n",
+                    executable
+                );
+                fs::write(entry_path, content).map_err(|error| error.to_string())
+            }
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            use windows_sys::Win32::System::Registry::{
+                RegCloseKey, RegCreateKeyExW, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW,
+                HKEY, HKEY_CURRENT_USER, KEY_SET_VALUE, REG_SZ,
+            };
+
+            const RUN_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+            const VALUE_NAME: &str = "WebFlowRuntimeManager";
+            let run_key: Vec<u16> = std::ffi::OsStr::new(RUN_KEY)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            let value_name: Vec<u16> = std::ffi::OsStr::new(VALUE_NAME)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+
+            if !settings.autostart {
+                let mut key: HKEY = null_mut();
+                let result = unsafe {
+                    RegOpenKeyExW(HKEY_CURRENT_USER, run_key.as_ptr(), 0, KEY_SET_VALUE, &mut key)
+                };
+                if result == 2 {
+                    return Ok(());
+                }
+                if result != 0 {
+                    return Err(format!("Failed to open Windows autostart registry key: {result}"));
+                }
+                let result = unsafe { RegDeleteValueW(key, value_name.as_ptr()) };
+                unsafe { RegCloseKey(key); }
+                if result != 0 && result != 2 {
+                    return Err(format!("Failed to remove Windows autostart entry: {result}"));
+                }
+                return Ok(());
+            }
+
+            let executable = std::env::current_exe().map_err(|error| error.to_string())?;
+            let command = format!("\"{}\" --autostart", executable.to_string_lossy().replace('"', "\\\""));
+            let command: Vec<u16> = std::ffi::OsStr::new(&command)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            let mut key: HKEY = null_mut();
+            let result = unsafe {
+                RegCreateKeyExW(
+                    HKEY_CURRENT_USER,
+                    run_key.as_ptr(),
+                    0,
+                    null(),
+                    0,
+                    KEY_SET_VALUE,
+                    null(),
+                    &mut key,
+                    null_mut(),
+                )
+            };
+            if result != 0 {
+                return Err(format!("Failed to open Windows autostart registry key: {result}"));
+            }
+            let result = unsafe {
+                RegSetValueExW(
+                    key,
+                    value_name.as_ptr(),
+                    0,
+                    REG_SZ,
+                    command.as_ptr().cast(),
+                    (command.len() * std::mem::size_of::<u16>()) as u32,
+                )
+            };
+            unsafe { RegCloseKey(key); }
+            if result != 0 {
+                return Err(format!("Failed to save Windows autostart entry: {result}"));
+            }
+            Ok(())
+        }
+
+        #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+        {
+            let _ = settings;
+            Ok(())
+        }
     }
 
     fn save_engine_settings_at(path: &Path, settings: &EngineSettings) -> Result<(), String> {

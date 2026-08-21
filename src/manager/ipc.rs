@@ -210,8 +210,13 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
                     }
                     let settings: Result<EngineSettings, _> = serde_json::from_value(merged);
                     if let Ok(st) = settings {
-                        let _ = Config::save_engine_settings(&st);
-                        send_response(&webview_handle, id, "true");
+                        match Config::save_engine_settings(&st) {
+                            Ok(()) => send_response(&webview_handle, id, "true"),
+                            Err(error) => {
+                                eprintln!("Failed to save engine settings: {error}");
+                                send_response(&webview_handle, id, "false");
+                            }
+                        }
                         return;
                     }
                 }

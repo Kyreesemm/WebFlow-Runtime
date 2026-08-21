@@ -121,7 +121,7 @@ fn save_manager_geometry(window: &Window) {
     }
 }
 
-pub fn run_manager(debug: bool) -> Result<(), String> {
+pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), String> {
     let instance_lock = match ManagerInstanceLock::acquire() {
         Ok(lock) => lock,
         Err(error) if error.contains("already running") => {
@@ -177,7 +177,8 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
     let webview_handle: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     create_webview(&window, webview_handle.clone(), debug)?;
 
-    let mut tray_enabled = crate::config::Config::load_engine_settings().minimize_to_tray;
+    let engine_settings = crate::config::Config::load_engine_settings();
+    let mut tray_enabled = engine_settings.minimize_to_tray;
     let mut tray = if tray_enabled {
         match ManagerTray::create(MANAGER_ICON_BYTES) {
             Ok(new_tray) => {
@@ -193,6 +194,13 @@ pub fn run_manager(debug: bool) -> Result<(), String> {
     } else {
         None
     };
+    if started_from_autostart && engine_settings.start_minimized && tray_enabled {
+        window.set_visible(false);
+        suspend_webview(&webview_handle);
+        if let Some(current_tray) = tray.as_ref() {
+            current_tray.set_interface_visible(false);
+        }
+    }
     let menu_events = MenuEvent::receiver();
 
     event_loop.run(move |event, _, control_flow| {

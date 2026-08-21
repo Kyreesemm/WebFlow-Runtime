@@ -16,6 +16,10 @@ pub struct CliArgs {
     #[arg(short, long)]
     pub debug: bool,
 
+    /// Mark a manager launch initiated by the operating system autostart entry
+    #[arg(long, hide = true)]
+    pub autostart: bool,
+
     /// Create application from template ID
     #[arg(long, value_name = "TEMPLATE_ID")]
     pub create_from_template: Option<String>,

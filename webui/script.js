@@ -1,6 +1,7 @@
 let managerAPI = null;
 window.currentImportedCookies = [];
 let defaultIsolatedStorage = true;
+let managerIsGnome = false;
 
 // Переводы
 const translations = {
@@ -34,6 +35,8 @@ const translations = {
         general_settings: 'Общие параметры',
         autostart: 'Автозапуск менеджера',
         autostart_desc: 'Запускать менеджер при старте системы',
+        start_minimized: 'Запускать свёрнутым',
+        start_minimized_desc: 'Запускать менеджер в системном трее при старте системы',
         minimize_tray: 'Минимизация в трей',
         minimize_tray_desc: 'Сворачивать менеджер и приложения в системный трей при закрытии',
         app_tray_icons: 'Иконки приложений в трее',
@@ -138,6 +141,8 @@ const translations = {
         general_settings: 'General Settings',
         autostart: 'Manager Autostart',
         autostart_desc: 'Start manager on system startup',
+        start_minimized: 'Start Minimized',
+        start_minimized_desc: 'Start the manager in the system tray with the system',
         minimize_tray: 'Minimize to Tray',
         minimize_tray_desc: 'Minimize the manager and applications to the system tray when closing',
         app_tray_icons: 'Application Tray Icons',
@@ -1159,6 +1164,18 @@ function updateAppStatuses() {
 // Engine Settings Functions
 // ============================================
 
+function updateStartMinimizedAvailability() {
+    const autostartElem = document.getElementById('setting-autostart');
+    const trayElem = document.getElementById('setting-tray');
+    const startMinimizedElem = document.getElementById('setting-start-minimized');
+    if (!autostartElem || !trayElem || !startMinimizedElem) return;
+
+    const available = autostartElem.checked && trayElem.checked && !managerIsGnome;
+    startMinimizedElem.disabled = !available;
+    startMinimizedElem.closest('.settings-row')?.classList.toggle('feature-unavailable', !available);
+    if (!available) startMinimizedElem.checked = false;
+}
+
 async function loadEngineSettings() {
     try {
         // Проверяем, инициализирован ли API
@@ -1183,16 +1200,21 @@ async function loadEngineSettings() {
             defaultIsolatedStorage = isolatedStorageElem.checked;
         }
 
+        managerIsGnome = settings.is_gnome === true;
+
         const autostartElem = document.getElementById('setting-autostart');
         if (autostartElem) autostartElem.checked = !!settings.autostart;
 
         const trayElem = document.getElementById('setting-tray');
         if (trayElem) {
-            const isGnome = settings.is_gnome === true;
-            trayElem.checked = !isGnome && !!settings.minimize_to_tray;
-            trayElem.disabled = isGnome;
-            trayElem.closest('.settings-row')?.classList.toggle('feature-unavailable', isGnome);
+            trayElem.checked = !managerIsGnome && !!settings.minimize_to_tray;
+            trayElem.disabled = managerIsGnome;
+            trayElem.closest('.settings-row')?.classList.toggle('feature-unavailable', managerIsGnome);
         }
+
+        const startMinimizedElem = document.getElementById('setting-start-minimized');
+        if (startMinimizedElem) startMinimizedElem.checked = !!settings.start_minimized;
+        updateStartMinimizedAvailability();
 
         const appTrayElem = document.getElementById('setting-app-tray-icons');
         if (appTrayElem) appTrayElem.checked = false;
@@ -1212,11 +1234,21 @@ async function loadEngineSettings() {
         // Автосохранение общих настроек при клике по чекбоксам
         if (autostartElem && !autostartElem.dataset.listener) {
             autostartElem.dataset.listener = 'true';
-            autostartElem.addEventListener('change', saveGeneralSettings);
+            autostartElem.addEventListener('change', () => {
+                updateStartMinimizedAvailability();
+                saveGeneralSettings();
+            });
         }
         if (trayElem && !trayElem.dataset.listener) {
             trayElem.dataset.listener = 'true';
-            trayElem.addEventListener('change', saveGeneralSettings);
+            trayElem.addEventListener('change', () => {
+                updateStartMinimizedAvailability();
+                saveGeneralSettings();
+            });
+        }
+        if (startMinimizedElem && !startMinimizedElem.dataset.listener) {
+            startMinimizedElem.dataset.listener = 'true';
+            startMinimizedElem.addEventListener('change', saveGeneralSettings);
         }
         if (appTrayElem && !appTrayElem.dataset.listener) {
             appTrayElem.dataset.listener = 'true';
@@ -1248,11 +1280,13 @@ async function saveGeneralSettings() {
         const trayAppsMenu = document.getElementById('setting-tray-apps-menu')?.checked || false;
         const googleOauthFallback = document.getElementById('setting-google-oauth-fallback')?.checked ?? true;
         const isolatedStorage = document.getElementById('setting-isolated-storage')?.checked ?? true;
+        const startMinimized = document.getElementById('setting-start-minimized')?.checked ?? false;
         defaultIsolatedStorage = isolatedStorage;
 
         const settings = {
             autostart,
             minimize_to_tray: minimizeToTray,
+            start_minimized: startMinimized,
             isolated_storage: isolatedStorage
         };
 

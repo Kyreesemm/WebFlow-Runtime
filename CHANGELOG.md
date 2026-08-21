@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added system autostart integration for the manager on Linux and Windows.
+- Added an option to start the manager minimized to the system tray during autostart.
 
 ### Changed
 - The descriptions of some functions in the manager's interface have been minimally changed

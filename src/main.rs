@@ -109,7 +109,7 @@ fn main() {
     }
 
     // Default mode: Launch Manager Web UI
-    if let Err(e) = manager::run_manager(args.debug) {
+    if let Err(e) = manager::run_manager(args.debug, args.autostart) {
         eprintln!("Error launching manager: {}", e);
         std::process::exit(1);
     }
