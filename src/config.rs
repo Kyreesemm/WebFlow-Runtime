@@ -290,8 +290,7 @@ impl Config {
 
     pub fn save_engine_settings(settings: &EngineSettings) -> Result<(), String> {
         let path = Self::get_config_dir().join("engine_settings.json");
-        Self::save_engine_settings_at(&path, settings)?;
-        Self::save_engine_settings_at(&Self::get_base_dir().join("engine_settings.json"), settings)
+        Self::save_engine_settings_at(&path, settings)
     }
 
     fn save_engine_settings_at(path: &Path, settings: &EngineSettings) -> Result<(), String> {
@@ -355,7 +354,6 @@ impl Config {
         let mut settings = Self::load_engine_settings();
         settings.userdata_path = Some(new_path.to_string_lossy().to_string());
         Self::save_engine_settings_at(&new_path.join("config").join("engine_settings.json"), &settings)?;
-        Self::save_engine_settings_at(&Self::get_base_dir().join("engine_settings.json"), &settings)?;
 
         if delete_old {
             fs::remove_dir_all(&old_path)

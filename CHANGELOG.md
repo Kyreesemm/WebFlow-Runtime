@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Fixed `engine_settings.json` being duplicated in the application root on Windows.
 - Disabled manager tray minimization on GNOME Linux sessions and forced it off by default there.
 - Fixed new applications ignoring the default isolated storage setting.
 - Fixed storage cleanup buttons having different sizes and corrected the Russian cache label.
