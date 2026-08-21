@@ -875,7 +875,7 @@ function loadUserAgents() {
 
         container.innerHTML = userAgents.map(ua => `
             <div class="ua-item">
-                <div>
+                <div class="ua-content">
                     <div class="ua-name">${ua.name}</div>
                     <div class="ua-string">${ua.string}</div>
                 </div>

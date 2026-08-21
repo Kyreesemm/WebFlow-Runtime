@@ -987,6 +987,14 @@ body.theme-transitioning * {
 .ua-name {
     font-weight: 500;
     font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ua-content {
+    min-width: 0;
+    flex: 1;
 }
 
 .ua-string {
@@ -1002,6 +1010,7 @@ body.theme-transitioning * {
 .ua-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .btn-small {
@@ -1709,6 +1718,14 @@ body.theme-transitioning * {
 .ua-name {
     font-weight: 500;
     font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ua-content {
+    min-width: 0;
+    flex: 1;
 }
 
 .ua-string {
@@ -1724,6 +1741,7 @@ body.theme-transitioning * {
 .ua-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .btn-small {

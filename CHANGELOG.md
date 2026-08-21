@@ -12,14 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Fixed User-Agent strings overflowing their cards at the manager's minimum width.
 
 ## [v0.1.2-dev] - August 20th, 2026
 
 ### Added
 - Added confirmation and data migration options when changing the userdata directory.
 - Added a stable userdata bootstrap configuration so all derived paths follow the active directory.
-
-### Changed
 
 ### Fixed
 - Fixed derived userdata paths and folder-opening actions continuing to use the previous directory after migration.
