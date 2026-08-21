@@ -1187,7 +1187,12 @@ async function loadEngineSettings() {
         if (autostartElem) autostartElem.checked = !!settings.autostart;
 
         const trayElem = document.getElementById('setting-tray');
-        if (trayElem) trayElem.checked = !!settings.minimize_to_tray;
+        if (trayElem) {
+            const isGnome = settings.is_gnome === true;
+            trayElem.checked = !isGnome && !!settings.minimize_to_tray;
+            trayElem.disabled = isGnome;
+            trayElem.closest('.settings-row')?.classList.toggle('feature-unavailable', isGnome);
+        }
 
         const appTrayElem = document.getElementById('setting-app-tray-icons');
         if (appTrayElem) appTrayElem.checked = false;

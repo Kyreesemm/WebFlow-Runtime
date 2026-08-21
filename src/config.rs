@@ -110,6 +110,22 @@ impl Default for EngineSettings {
 pub struct Config;
 
 impl Config {
+    pub fn is_gnome_session() -> bool {
+        #[cfg(target_os = "linux")]
+        {
+            return ["XDG_CURRENT_DESKTOP", "XDG_SESSION_DESKTOP", "DESKTOP_SESSION"]
+                .iter()
+                .filter_map(|name| std::env::var(name).ok())
+                .flat_map(|value| value.split(':').map(str::to_owned).collect::<Vec<_>>())
+                .any(|value| value.to_ascii_lowercase().contains("gnome"));
+        }
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            false
+        }
+    }
+
     pub fn get_base_dir() -> PathBuf {
         // Match the former Python layout while developing: `cargo run` puts
         // the executable under target/debug, but userdata remains alongside
@@ -262,10 +278,14 @@ impl Config {
         if !path.exists() {
             return EngineSettings::default();
         }
-        fs::read_to_string(path)
+        let mut settings: EngineSettings = fs::read_to_string(path)
             .ok()
             .and_then(|c| serde_json::from_str(&c).ok())
-            .unwrap_or_default()
+            .unwrap_or_default();
+        if Self::is_gnome_session() {
+            settings.minimize_to_tray = false;
+        }
+        settings
     }
 
     pub fn save_engine_settings(settings: &EngineSettings) -> Result<(), String> {

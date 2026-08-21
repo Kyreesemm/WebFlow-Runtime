@@ -183,6 +183,7 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
             let settings = Config::load_engine_settings();
             let mut val = serde_json::to_value(&settings).unwrap_or_default();
             if let Some(map) = val.as_object_mut() {
+                map.insert("is_gnome".into(), Value::Bool(Config::is_gnome_session()));
                 map.insert("current_userdata_path".into(), Value::String(Config::get_userdata_base().to_string_lossy().to_string()));
                 map.insert("current_apps_path".into(), Value::String(Config::get_apps_dir().to_string_lossy().to_string()));
                 map.insert("current_config_path".into(), Value::String(Config::get_config_dir().to_string_lossy().to_string()));
