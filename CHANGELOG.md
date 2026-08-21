@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added detailed manager debug logging for UI events, IPC requests and responses, JavaScript errors, and backend timings.
 - Added `--debug-verbose` for high-volume background debug logging.
 - Added English CLI documentation covering all supported options and execution modes.
+- Added `--debug-file` for detailed per-session debug logs next to the executable.
 
 ### Changed
 - Reduced idle noise in the default `--debug` output and added timestamps with color-coded log categories.
+- File debug logging includes high-volume background events without enabling terminal output.
 
 ### Fixed
 

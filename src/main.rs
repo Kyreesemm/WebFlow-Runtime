@@ -3,6 +3,7 @@
 mod app_runner;
 mod cli;
 mod config;
+mod debug;
 mod instance;
 mod manager;
 mod tray;
@@ -35,6 +36,13 @@ fn main() {
     }
 
     let args = CliArgs::parse();
+    let debug_enabled = args.debug || args.debug_file;
+
+    if debug_enabled {
+        if let Err(error) = debug::initialize(args.debug, args.debug_file) {
+            eprintln!("Failed to initialize debug logging: {error}");
+        }
+    }
 
     #[cfg(target_os = "windows")]
     if args.debug {
@@ -129,7 +137,7 @@ fn main() {
     }
 
     // Default mode: Launch Manager Web UI
-    if let Err(e) = manager::run_manager(args.debug, args.debug_verbose, args.autostart) {
+    if let Err(e) = manager::run_manager(debug_enabled, args.debug_verbose, args.autostart) {
         eprintln!("Error launching manager: {}", e);
         std::process::exit(1);
     }

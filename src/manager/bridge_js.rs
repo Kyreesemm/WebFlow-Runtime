@@ -90,7 +90,7 @@ pub const DEBUG_INJECTED_JS: &str = r#"
     }
 
     function shouldTraceCommand(command) {
-        if (window.__WEBFLOW_DEBUG_VERBOSE__) return true;
+        if (window.__WEBFLOW_DEBUG_VERBOSE__ || window.__WEBFLOW_DEBUG_FILE__) return true;
         return [
             'getRunningApps', 'getTotalCacheSize', 'getTotalDataSize',
             'getAppStorageSizes'

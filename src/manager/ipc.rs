@@ -47,7 +47,9 @@ pub fn handle_ipc_message(
         return;
     }
 
-    let _trace = if debug && (debug_verbose || !is_background_command(cmd)) {
+    let _trace = if debug
+        && (debug_verbose || crate::debug::file_logging_enabled() || !is_background_command(cmd))
+    {
         Some(DebugRequest::new(id, cmd, body))
     } else {
         None
@@ -517,23 +519,7 @@ fn debug_event(event: &Value) {
 }
 
 pub(crate) fn debug_print(color: &str, label: &str, message: String) {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default();
-    let day_seconds = now.as_secs() % 86_400;
-    let hours = day_seconds / 3_600;
-    let minutes = (day_seconds % 3_600) / 60;
-    let seconds = day_seconds % 60;
-    eprintln!(
-        "\x1b[{}m[{:02}:{:02}:{:02}.{:03}][{}] {}\x1b[0m",
-        color,
-        hours,
-        minutes,
-        seconds,
-        now.subsec_millis(),
-        label,
-        message
-    );
+    crate::debug::log(color, label, message);
 }
 
 fn send_response(webview_handle: &Arc<Mutex<Option<WebView>>>, id: u64, json_data: &str) {

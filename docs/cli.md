@@ -15,6 +15,7 @@ webflow-runtime [OPTIONS]
 | `-a, --app <APP_ID>` | Launch an application directly by its ID without opening the Manager UI. |
 | `-d, --debug` | Enable WebView developer tools. In Manager mode, also enable timestamped, color-coded logging for UI events, JavaScript diagnostics, IPC activity, and backend command timings. On Windows, attach to the parent console when available. |
 | `--debug-verbose` | Include background polling and other high-volume debug events. This option affects Manager debug logging and is intended to be used together with `--debug`. |
+| `--debug-file` | Write a detailed session log to `logs/` next to the executable. The file includes background polling and high-volume debug events. Does not enable terminal output by itself. |
 | `--create-from-template <TEMPLATE_ID>` | Create an application from a template and exit. |
 | `--list-templates` | List available built-in and filesystem templates and exit. |
 | `--help` | Display CLI help and exit. `-h` is also accepted. |
@@ -37,6 +38,15 @@ Running without a mode-selecting option starts WebFlow Runtime Manager:
 ./webflow-runtime --debug
 ./webflow-runtime --debug --debug-verbose
 ```
+
+Use `--debug-file` to write detailed diagnostics without terminal output. Combine it with `--debug` to write the detailed log and keep the normal color-coded terminal output:
+
+```bash
+./webflow-runtime --debug-file
+./webflow-runtime --debug --debug-file
+```
+
+Each session creates `logs/session-YYYYMMDD-HHMMSS-PID.log` next to the executable. File logging is enabled only when explicitly requested.
 
 ### Direct application mode
 

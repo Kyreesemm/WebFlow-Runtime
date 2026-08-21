@@ -333,6 +333,9 @@ fn create_webview(
         if debug_verbose {
             builder = builder.with_initialization_script("window.__WEBFLOW_DEBUG_VERBOSE__ = true;");
         }
+        if crate::debug::file_logging_enabled() {
+            builder = builder.with_initialization_script("window.__WEBFLOW_DEBUG_FILE__ = true;");
+        }
         builder = builder.with_initialization_script(bridge_js::DEBUG_INJECTED_JS);
     }
     let mut builder = builder

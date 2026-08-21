@@ -20,6 +20,10 @@ pub struct CliArgs {
     #[arg(long)]
     pub debug_verbose: bool,
 
+    /// Write a detailed debug session log to the executable directory
+    #[arg(long)]
+    pub debug_file: bool,
+
     /// Mark a manager launch initiated by the operating system autostart entry
     #[arg(long, hide = true)]
     pub autostart: bool,
