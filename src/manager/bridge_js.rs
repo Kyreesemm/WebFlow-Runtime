@@ -89,6 +89,14 @@ pub const DEBUG_INJECTED_JS: &str = r#"
         }));
     }
 
+    function shouldTraceCommand(command) {
+        if (window.__WEBFLOW_DEBUG_VERBOSE__) return true;
+        return [
+            'getRunningApps', 'getTotalCacheSize', 'getTotalDataSize',
+            'getAppStorageSizes'
+        ].indexOf(command) === -1;
+    }
+
     function describeElement(element) {
         if (!element || !element.tagName) return null;
         return {
@@ -147,17 +155,21 @@ pub const DEBUG_INJECTED_JS: &str = r#"
                             ? args[callbackIndex]
                             : null;
                         const requestArgs = callback ? args.slice(0, callbackIndex) : args;
-                        debugToBackend('ipc.request', {
-                            id: null,
-                            command: methodName,
-                            args: requestArgs
-                        });
+                        if (shouldTraceCommand(methodName)) {
+                            debugToBackend('ipc.request', {
+                                id: null,
+                                command: methodName,
+                                args: requestArgs
+                            });
+                        }
                         if (callback) {
                             args[callbackIndex] = function(data) {
-                                debugToBackend('ipc.response', {
-                                    command: methodName,
-                                    data: data
-                                });
+                                if (shouldTraceCommand(methodName)) {
+                                    debugToBackend('ipc.response', {
+                                        command: methodName,
+                                        data: data
+                                    });
+                                }
                                 return callback(data);
                             };
                         }

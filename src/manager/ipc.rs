@@ -21,7 +21,12 @@ pub struct IpcPayload {
     pub args: Vec<Value>,
 }
 
-pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &str, debug: bool) {
+pub fn handle_ipc_message(
+    webview_handle: Arc<Mutex<Option<WebView>>>,
+    body: &str,
+    debug: bool,
+    debug_verbose: bool,
+) {
     let payload: IpcPayload = match serde_json::from_str(body) {
         Ok(p) => p,
         Err(e) => {
@@ -33,20 +38,20 @@ pub fn handle_ipc_message(webview_handle: Arc<Mutex<Option<WebView>>>, body: &st
     let id = payload.id;
     let cmd = payload.cmd.as_str();
     let args = payload.args;
-    let _trace = if debug {
-        Some(DebugRequest::new(id, cmd, body))
-    } else {
-        None
-    };
-
     if cmd == "__debug" {
         if debug {
             if let Some(event) = args.first() {
-                eprintln!("[WebFlow DEBUG][UI] {}", debug_preview(&event.to_string()));
+                debug_event(event);
             }
         }
         return;
     }
+
+    let _trace = if debug && (debug_verbose || !is_background_command(cmd)) {
+        Some(DebugRequest::new(id, cmd, body))
+    } else {
+        None
+    };
 
     match cmd {
         "listApps" => {
@@ -445,11 +450,15 @@ struct DebugRequest<'a> {
 
 impl<'a> DebugRequest<'a> {
     fn new(id: u64, command: &'a str, body: &str) -> Self {
-        eprintln!(
-            "[WebFlow DEBUG][IPC] request id={} command={} payload={}",
-            id,
-            command,
-            debug_preview(body)
+        debug_print(
+            "36",
+            "IPC",
+            format!(
+                "request id={} command={} payload={}",
+                id,
+                command,
+                debug_preview(body)
+            ),
         );
         Self {
             id,
@@ -461,11 +470,15 @@ impl<'a> DebugRequest<'a> {
 
 impl Drop for DebugRequest<'_> {
     fn drop(&mut self) {
-        eprintln!(
-            "[WebFlow DEBUG][IPC] completed id={} command={} elapsed={}ms",
-            self.id,
-            self.command,
-            self.started.elapsed().as_millis()
+        debug_print(
+            "32",
+            "BACKEND",
+            format!(
+                "completed id={} command={} elapsed={}ms",
+                self.id,
+                self.command,
+                self.started.elapsed().as_millis()
+            ),
         );
     }
 }
@@ -477,6 +490,50 @@ fn debug_preview(value: &str) -> String {
     } else {
         preview
     }
+}
+
+fn is_background_command(command: &str) -> bool {
+    matches!(
+        command,
+        "getRunningApps" | "getTotalCacheSize" | "getTotalDataSize" | "getAppStorageSizes"
+    )
+}
+
+fn debug_event(event: &Value) {
+    let event_type = event
+        .get("type")
+        .and_then(Value::as_str)
+        .unwrap_or("debug");
+    let (color, label) = if event_type.starts_with("js.error") || event_type.starts_with("js.unhandled") {
+        ("31", "JS")
+    } else if event_type.starts_with("ui.") {
+        ("33", "UI")
+    } else if event_type.starts_with("ipc.") {
+        ("36", "IPC")
+    } else {
+        ("90", "JS")
+    };
+    debug_print(color, label, format!("{} {}", event_type, debug_preview(&event.to_string())));
+}
+
+pub(crate) fn debug_print(color: &str, label: &str, message: String) {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    let day_seconds = now.as_secs() % 86_400;
+    let hours = day_seconds / 3_600;
+    let minutes = (day_seconds % 3_600) / 60;
+    let seconds = day_seconds % 60;
+    eprintln!(
+        "\x1b[{}m[{:02}:{:02}:{:02}.{:03}][{}] {}\x1b[0m",
+        color,
+        hours,
+        minutes,
+        seconds,
+        now.subsec_millis(),
+        label,
+        message
+    );
 }
 
 fn send_response(webview_handle: &Arc<Mutex<Option<WebView>>>, id: u64, json_data: &str) {

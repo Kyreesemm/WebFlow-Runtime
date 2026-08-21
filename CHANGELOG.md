@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added detailed manager debug logging for UI events, IPC requests and responses, JavaScript errors, and backend timings.
+- Added `--debug-verbose` for high-volume background debug logging.
 
 ### Changed
+- Reduced idle noise in the default `--debug` output and added timestamps with color-coded log categories.
 
 ### Fixed
 

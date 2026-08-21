@@ -121,9 +121,9 @@ fn save_manager_geometry(window: &Window) {
     }
 }
 
-pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), String> {
+pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: bool) -> Result<(), String> {
     if debug {
-        eprintln!("[WebFlow DEBUG][MANAGER] starting manager");
+        ipc::debug_print("35", "MANAGER", "starting manager".to_string());
     }
     let instance_lock = match ManagerInstanceLock::acquire() {
         Ok(lock) => lock,
@@ -178,7 +178,7 @@ pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), Stri
     apply_window_icon(&window, &icon_path, options.icon.clone());
 
     let webview_handle: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
-    create_webview(&window, webview_handle.clone(), debug)?;
+    create_webview(&window, webview_handle.clone(), debug, debug_verbose)?;
 
     let engine_settings = crate::config::Config::load_engine_settings();
     let mut tray_enabled = engine_settings.minimize_to_tray;
@@ -216,7 +216,7 @@ pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), Stri
                 window.set_minimized(false);
                 window.set_focus();
                 if webview_handle.lock().unwrap().is_none() {
-                    if let Err(error) = create_webview(&window, webview_handle.clone(), debug) {
+                    if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose) {
                         eprintln!("Failed to restore manager WebView: {error}");
                     }
                 }
@@ -238,7 +238,7 @@ pub fn run_manager(debug: bool, started_from_autostart: bool) -> Result<(), Stri
                         window.set_visible(true);
                         window.set_focus();
                         if webview_handle.lock().unwrap().is_none() {
-                            if let Err(error) = create_webview(&window, webview_handle.clone(), debug) {
+                            if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose) {
                                 eprintln!("Failed to restore manager WebView: {error}");
                             }
                         }
@@ -319,9 +319,10 @@ fn create_webview(
     window: &Window,
     webview_handle: Arc<Mutex<Option<WebView>>>,
     debug: bool,
+    debug_verbose: bool,
 ) -> Result<(), String> {
     if debug {
-        eprintln!("[WebFlow DEBUG][WEBVIEW] creating manager WebView");
+        ipc::debug_print("35", "WEBVIEW", "creating manager WebView".to_string());
     }
     let protocol = WebViewBuilder::new().with_custom_protocol("webflow".into(), move |_webview, req| {
         webui::handle_custom_protocol_request(req.uri().path())
@@ -329,11 +330,14 @@ fn create_webview(
     let webview_clone = webview_handle.clone();
     let mut builder = protocol.with_initialization_script(bridge_js::INJECTED_BRIDGE_JS);
     if debug {
+        if debug_verbose {
+            builder = builder.with_initialization_script("window.__WEBFLOW_DEBUG_VERBOSE__ = true;");
+        }
         builder = builder.with_initialization_script(bridge_js::DEBUG_INJECTED_JS);
     }
     let mut builder = builder
         .with_ipc_handler(move |req| {
-            ipc::handle_ipc_message(webview_clone.clone(), req.body(), debug);
+            ipc::handle_ipc_message(webview_clone.clone(), req.body(), debug, debug_verbose);
         })
         .with_url("webflow://manager/index.html");
 
@@ -344,7 +348,7 @@ fn create_webview(
     let webview = build_webview(builder, window)?;
     *webview_handle.lock().unwrap() = Some(webview);
     if debug {
-        eprintln!("[WebFlow DEBUG][WEBVIEW] manager WebView created");
+        ipc::debug_print("32", "WEBVIEW", "manager WebView created".to_string());
     }
     Ok(())
 }

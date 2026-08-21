@@ -39,9 +39,20 @@ fn main() {
     #[cfg(target_os = "windows")]
     if args.debug {
         unsafe {
-            let _ = windows_sys::Win32::System::Console::AttachConsole(
-                windows_sys::Win32::System::Console::ATTACH_PARENT_PROCESS,
-            );
+            use windows_sys::Win32::System::Console::{
+                AttachConsole, GetConsoleMode, GetStdHandle, SetConsoleMode,
+                ATTACH_PARENT_PROCESS, ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+                STD_ERROR_HANDLE, STD_OUTPUT_HANDLE,
+            };
+
+            let _ = AttachConsole(ATTACH_PARENT_PROCESS);
+            for standard_handle in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE] {
+                let handle = GetStdHandle(standard_handle);
+                let mut mode = 0;
+                if GetConsoleMode(handle, &mut mode) != 0 {
+                    let _ = SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+                }
+            }
         }
     }
 
@@ -118,7 +129,7 @@ fn main() {
     }
 
     // Default mode: Launch Manager Web UI
-    if let Err(e) = manager::run_manager(args.debug, args.autostart) {
+    if let Err(e) = manager::run_manager(args.debug, args.debug_verbose, args.autostart) {
         eprintln!("Error launching manager: {}", e);
         std::process::exit(1);
     }

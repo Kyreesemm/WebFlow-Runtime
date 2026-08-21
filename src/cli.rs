@@ -16,6 +16,10 @@ pub struct CliArgs {
     #[arg(short, long)]
     pub debug: bool,
 
+    /// Include background polling and high-volume debug events
+    #[arg(long)]
+    pub debug_verbose: bool,
+
     /// Mark a manager launch initiated by the operating system autostart entry
     #[arg(long, hide = true)]
     pub autostart: bool,
