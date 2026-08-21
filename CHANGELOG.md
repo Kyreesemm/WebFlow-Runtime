@@ -8,11 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [v0.1.3-dev] - August 21st, 2026
+
+### Added
 - Added system autostart integration for the manager on Linux and Windows.
 - Added an option to start the manager minimized to the system tray during autostart.
 
 ### Changed
-- The descriptions of some functions in the manager's interface have been minimally changed
+- The descriptions of some functions in the manager's interface have been minimally changed.
 
 ### Fixed
 - Fixed the startup-minimized option availability to follow both manager autostart and tray minimization settings.
