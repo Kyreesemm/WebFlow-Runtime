@@ -91,6 +91,9 @@ const CHROME_LINUX_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.3
 const CHROME_WINDOWS_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36";
 
 pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
+    if debug {
+        crate::debug::log("35", "APP", format!("starting app id={app_id}"));
+    }
     let config: AppConfig = Config::load_app_config(&app_id)
         .ok_or_else(|| format!("App configuration not found for '{}'", app_id))?;
 
@@ -130,6 +133,13 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     } else {
         Config::get_shared_storage_dir()
     };
+    if debug {
+        crate::debug::log(
+            "35",
+            "APP",
+            format!("storage path={} isolated={}", storage_dir.display(), config.isolated_storage),
+        );
+    }
     std::fs::create_dir_all(&storage_dir).map_err(|e| e.to_string())?;
 
     let mut web_context = WebContext::new(Some(storage_dir));
@@ -147,6 +157,9 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         _ => None,
     };
     if let Some(ua) = selected_ua {
+        if debug {
+            crate::debug::log("35", "APP", format!("using user-agent profile={}", config.user_agent));
+        }
         builder = builder.with_user_agent(ua);
     }
 
@@ -158,6 +171,13 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     builder = builder.with_ipc_handler(move |request| {
         if request.body() == "__webflow_runtime_heartbeat__" {
             heartbeat_for_ipc.store(now_seconds(), Ordering::Relaxed);
+        } else if debug {
+            let (color, label) = request
+                .body()
+                .strip_prefix("__webflow_debug__:")
+                .map(|_| ("33", "APP-UI"))
+                .unwrap_or(("90", "APP"));
+            crate::debug::log(color, label, crate::debug::preview(request.body()));
         }
     });
 
@@ -172,6 +192,68 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
         }, 2000);
         "#,
     );
+
+    if debug {
+        init_script.push_str(
+            r#"
+            (function() {
+                function send(type, details) {
+                    if (window.ipc && window.ipc.postMessage) {
+                        window.ipc.postMessage('__webflow_debug__:' + JSON.stringify({
+                            type: type,
+                            details: details
+                        }));
+                    }
+                }
+                function describe(element) {
+                    if (!element || !element.tagName) return null;
+                    return {
+                        tag: element.tagName.toLowerCase(),
+                        id: element.id || null,
+                        name: element.getAttribute('name') || null,
+                        type: element.getAttribute('type') || null,
+                        text: (element.innerText || element.textContent || '').trim().slice(0, 120),
+                        value: typeof element.value === 'string' ? element.value.slice(0, 200) : null,
+                        checked: typeof element.checked === 'boolean' ? element.checked : null
+                    };
+                }
+                document.addEventListener('click', function(event) {
+                    send('ui.click', { element: describe(event.target) });
+                }, true);
+                document.addEventListener('change', function(event) {
+                    send('ui.change', { element: describe(event.target) });
+                }, true);
+                document.addEventListener('submit', function(event) {
+                    send('ui.submit', { element: describe(event.target) });
+                }, true);
+                window.addEventListener('error', function(event) {
+                    send('js.error', {
+                        message: event.message,
+                        source: event.filename,
+                        line: event.lineno,
+                        column: event.colno
+                    });
+                });
+                window.addEventListener('unhandledrejection', function(event) {
+                    send('js.unhandledrejection', { reason: String(event.reason) });
+                });
+                ['log', 'info', 'warn', 'error'].forEach(function(level) {
+                    var original = console[level];
+                    console[level] = function() {
+                        send('js.console', {
+                            level: level,
+                            arguments: Array.prototype.slice.call(arguments).map(function(value) {
+                                try { return typeof value === 'string' ? value : JSON.stringify(value); }
+                                catch (_) { return String(value); }
+                            }).join(' ')
+                        });
+                        return original.apply(console, arguments);
+                    };
+                });
+            })();
+            "#,
+        );
+    }
 
     init_script.push_str(
         r#"

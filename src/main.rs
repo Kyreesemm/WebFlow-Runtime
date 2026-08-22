@@ -37,9 +37,17 @@ fn main() {
 
     let args = CliArgs::parse();
     let debug_enabled = args.debug || args.debug_file;
+    let log_prefix = if args.app.is_some()
+        && !args.list_templates
+        && args.create_from_template.is_none()
+    {
+        "app-session"
+    } else {
+        "session"
+    };
 
     if debug_enabled {
-        if let Err(error) = debug::initialize(args.debug, args.debug_file) {
+        if let Err(error) = debug::initialize(args.debug, args.debug_file, log_prefix) {
             eprintln!("Failed to initialize debug logging: {error}");
         }
     }
@@ -129,7 +137,7 @@ fn main() {
 
     // App mode: Launch specific app directly (ZERO Manager UI loaded into memory!)
     if let Some(app_id) = args.app {
-        if let Err(e) = app_runner::run_app(app_id, args.debug) {
+        if let Err(e) = app_runner::run_app(app_id, debug_enabled) {
             eprintln!("Error launching app: {}", e);
             std::process::exit(1);
         }

@@ -11,7 +11,7 @@ struct DebugLogger {
 
 static LOGGER: OnceLock<Mutex<DebugLogger>> = OnceLock::new();
 
-pub fn initialize(terminal: bool, file: bool) -> Result<Option<PathBuf>, String> {
+pub fn initialize(terminal: bool, file: bool, prefix: &str) -> Result<Option<PathBuf>, String> {
     let log_path = if file {
         let executable = std::env::current_exe().map_err(|error| error.to_string())?;
         let directory = executable
@@ -20,7 +20,8 @@ pub fn initialize(terminal: bool, file: bool) -> Result<Option<PathBuf>, String>
             .join("logs");
         fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
         let path = directory.join(format!(
-            "session-{}-{}.log",
+            "{}-{}-{}.log",
+            prefix,
             session_timestamp(),
             std::process::id()
         ));
@@ -72,6 +73,15 @@ pub fn log(color: &str, label: &str, message: String) {
     if let Some(file) = logger.file.as_mut() {
         let _ = writeln!(file, "[{}][{}] {}", timestamp, label, message);
         let _ = file.flush();
+    }
+}
+
+pub fn preview(value: &str) -> String {
+    let preview: String = value.chars().take(2000).collect();
+    if preview.chars().count() < value.chars().count() {
+        format!("{}... ({} bytes total)", preview, value.len())
+    } else {
+        preview
     }
 }
 

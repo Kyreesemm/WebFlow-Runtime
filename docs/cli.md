@@ -13,7 +13,7 @@ webflow-runtime [OPTIONS]
 | Option | Description |
 | --- | --- |
 | `-a, --app <APP_ID>` | Launch an application directly by its ID without opening the Manager UI. |
-| `-d, --debug` | Enable WebView developer tools. In Manager mode, also enable timestamped, color-coded logging for UI events, JavaScript diagnostics, IPC activity, and backend command timings. On Windows, attach to the parent console when available. |
+| `-d, --debug` | Enable WebView developer tools. In Manager and direct application modes, also enable timestamped, color-coded logging for UI events and JavaScript diagnostics. Manager mode additionally logs IPC activity and backend command timings. On Windows, attach to the parent console when available. |
 | `--debug-verbose` | Include background polling and other high-volume debug events. This option affects Manager debug logging and is intended to be used together with `--debug`. |
 | `--debug-file` | Write a detailed session log to `logs/` next to the executable. The file includes background polling and high-volume debug events. Does not enable terminal output by itself. |
 | `--create-from-template <TEMPLATE_ID>` | Create an application from a template and exit. |
@@ -32,7 +32,7 @@ Running without a mode-selecting option starts WebFlow Runtime Manager:
 ./webflow-runtime
 ```
 
-`--debug` opens WebView developer tools and enables diagnostic output in the launching terminal. The default debug level suppresses recurring background polling. Use `--debug-verbose` to include it:
+`--debug` opens WebView developer tools and enables diagnostic output in the launching terminal. The default Manager debug level suppresses recurring background polling. Use `--debug-verbose` to include it:
 
 ```bash
 ./webflow-runtime --debug
@@ -46,7 +46,7 @@ Use `--debug-file` to write detailed diagnostics without terminal output. Combin
 ./webflow-runtime --debug --debug-file
 ```
 
-Each session creates `logs/session-YYYYMMDD-HHMMSS-PID.log` next to the executable. File logging is enabled only when explicitly requested.
+Manager mode creates `logs/session-YYYYMMDD-HHMMSS-PID.log`; direct application mode creates `logs/app-session-YYYYMMDD-HHMMSS-PID.log`. Files are placed next to the executable. File logging is enabled only when explicitly requested.
 
 ### Direct application mode
 
@@ -57,6 +57,8 @@ Each session creates `logs/session-YYYYMMDD-HHMMSS-PID.log` next to the executab
 ```
 
 In this mode, `--debug` enables WebView developer tools for the application. Manager UI and Manager IPC diagnostics are not active.
+
+In this mode, `--debug` logs application UI events, JavaScript errors, unhandled promise rejections, and console messages to the terminal. `--debug-file` writes the same application diagnostics to an `app-session-...log` file, and combining both options enables both outputs.
 
 ### Template listing mode
 
