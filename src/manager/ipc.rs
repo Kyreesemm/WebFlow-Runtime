@@ -172,12 +172,29 @@ pub fn handle_ipc_message(
         "runApp" => {
             if let Some(app_id) = args.get(0).and_then(|v| v.as_str()) {
                 if let Ok(exe) = std::env::current_exe() {
-                    let _ = Command::new(exe)
-                        .arg("--app")
-                        .arg(app_id)
-                        .spawn();
+                    let mut command = Command::new(exe);
+                    command.arg("--app").arg(app_id);
+                    if Config::load_engine_settings().app_log_to_file {
+                        command.arg("--debug-file");
+                    }
+                    let _ = command.spawn();
                     send_response(&webview_handle, id, "true");
                     return;
+                }
+            }
+            send_response(&webview_handle, id, "false");
+        }
+        "restartManager" => {
+            let log_to_file = args.first().and_then(Value::as_bool).unwrap_or(false);
+            if let Ok(exe) = std::env::current_exe() {
+                let mut command = Command::new(exe);
+                command.arg("--restart");
+                if log_to_file {
+                    command.arg("--debug-file");
+                }
+                if command.spawn().is_ok() {
+                    send_response(&webview_handle, id, "true");
+                    std::process::exit(0);
                 }
             }
             send_response(&webview_handle, id, "false");

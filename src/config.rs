@@ -97,6 +97,10 @@ pub struct EngineSettings {
     pub tray_apps_menu: bool,
     #[serde(default)]
     pub google_oauth_fallback: bool,
+    #[serde(default)]
+    pub manager_log_to_file: bool,
+    #[serde(default)]
+    pub app_log_to_file: bool,
 }
 
 impl Default for EngineSettings {
@@ -110,6 +114,8 @@ impl Default for EngineSettings {
             app_tray_icons: false,
             tray_apps_menu: false,
             google_oauth_fallback: false,
+            manager_log_to_file: false,
+            app_log_to_file: false,
         }
     }
 }

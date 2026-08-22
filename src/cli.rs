@@ -28,6 +28,10 @@ pub struct CliArgs {
     #[arg(long, hide = true)]
     pub autostart: bool,
 
+    /// Delay an internal manager restart until the previous process exits
+    #[arg(long, hide = true)]
+    pub restart: bool,
+
     /// Create application from template ID
     #[arg(long, value_name = "TEMPLATE_ID")]
     pub create_from_template: Option<String>,

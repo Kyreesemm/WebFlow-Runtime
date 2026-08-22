@@ -36,7 +36,17 @@ fn main() {
     }
 
     let args = CliArgs::parse();
-    let debug_enabled = args.debug || args.debug_file;
+    if args.restart {
+        std::thread::sleep(std::time::Duration::from_millis(300));
+    }
+
+    let manager_mode = args.app.is_none()
+        && !args.list_templates
+        && args.create_from_template.is_none();
+    let persisted_manager_file_logging = manager_mode
+        && config::Config::load_engine_settings().manager_log_to_file;
+    let file_logging = args.debug_file || persisted_manager_file_logging;
+    let debug_enabled = args.debug || file_logging;
     let log_prefix = if args.app.is_some()
         && !args.list_templates
         && args.create_from_template.is_none()
@@ -47,7 +57,7 @@ fn main() {
     };
 
     if debug_enabled {
-        if let Err(error) = debug::initialize(args.debug, args.debug_file, log_prefix) {
+        if let Err(error) = debug::initialize(args.debug, file_logging, log_prefix) {
             eprintln!("Failed to initialize debug logging: {error}");
         }
     }

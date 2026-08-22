@@ -2,6 +2,7 @@ let managerAPI = null;
 window.currentImportedCookies = [];
 let defaultIsolatedStorage = true;
 let managerIsGnome = false;
+let savedManagerFileLogging = false;
 
 // Переводы
 const translations = {
@@ -33,6 +34,12 @@ const translations = {
         useragent_string: 'User-Agent строка',
         add: 'Добавить',
         general_settings: 'Общие параметры',
+        developer_settings: 'Для разработчиков',
+        manager_file_logging: 'Сохранять логи менеджера в файл',
+        manager_file_logging_desc: 'Записывать подробные логи каждого запуска менеджера в папку logs',
+        app_file_logging: 'Сохранять логи приложений в файл',
+        app_file_logging_desc: 'Запускать приложения из менеджера с подробным логированием в папку logs',
+        manager_logging_restart: 'Настройка сохранена. Менеджер перезапускается',
         autostart: 'Автозапуск менеджера',
         autostart_desc: 'Запускать менеджер при старте системы',
         start_minimized: 'Запускать свёрнутым',
@@ -139,6 +146,12 @@ const translations = {
         useragent_string: 'User-Agent String',
         add: 'Add',
         general_settings: 'General Settings',
+        developer_settings: 'For Developers',
+        manager_file_logging: 'Save Manager Logs to File',
+        manager_file_logging_desc: 'Write detailed logs for every manager launch to the logs folder',
+        app_file_logging: 'Save Application Logs to File',
+        app_file_logging_desc: 'Launch applications from the Manager with detailed logging to the logs folder',
+        manager_logging_restart: 'Setting saved. The Manager is restarting',
         autostart: 'Manager Autostart',
         autostart_desc: 'Start manager on system startup',
         start_minimized: 'Start Minimized',
@@ -1225,6 +1238,15 @@ async function loadEngineSettings() {
         const googleOauthFallbackElem = document.getElementById('setting-google-oauth-fallback');
         if (googleOauthFallbackElem) googleOauthFallbackElem.checked = false;
 
+        const managerFileLoggingElem = document.getElementById('setting-manager-file-logging');
+        if (managerFileLoggingElem) {
+            managerFileLoggingElem.checked = !!settings.manager_log_to_file;
+            savedManagerFileLogging = managerFileLoggingElem.checked;
+        }
+
+        const appFileLoggingElem = document.getElementById('setting-app-file-logging');
+        if (appFileLoggingElem) appFileLoggingElem.checked = !!settings.app_log_to_file;
+
         document.getElementById('userdata-path').value = settings.current_userdata_path || '';
         document.getElementById('apps-path').textContent = settings.current_apps_path || '';
         document.getElementById('config-path').textContent = settings.current_config_path || '';
@@ -1266,6 +1288,14 @@ async function loadEngineSettings() {
             isolatedStorageElem.dataset.listener = 'true';
             isolatedStorageElem.addEventListener('change', saveGeneralSettings);
         }
+        if (managerFileLoggingElem && !managerFileLoggingElem.dataset.listener) {
+            managerFileLoggingElem.dataset.listener = 'true';
+            managerFileLoggingElem.addEventListener('change', saveGeneralSettings);
+        }
+        if (appFileLoggingElem && !appFileLoggingElem.dataset.listener) {
+            appFileLoggingElem.dataset.listener = 'true';
+            appFileLoggingElem.addEventListener('change', saveGeneralSettings);
+        }
     } catch (error) {
         console.error('Error loading engine settings:', error);
     }
@@ -1281,13 +1311,18 @@ async function saveGeneralSettings() {
         const googleOauthFallback = document.getElementById('setting-google-oauth-fallback')?.checked ?? true;
         const isolatedStorage = document.getElementById('setting-isolated-storage')?.checked ?? true;
         const startMinimized = document.getElementById('setting-start-minimized')?.checked ?? false;
+        const managerFileLogging = document.getElementById('setting-manager-file-logging')?.checked ?? false;
+        const appFileLogging = document.getElementById('setting-app-file-logging')?.checked ?? false;
+        const managerLoggingChanged = managerFileLogging !== savedManagerFileLogging;
         defaultIsolatedStorage = isolatedStorage;
 
         const settings = {
             autostart,
             minimize_to_tray: minimizeToTray,
             start_minimized: startMinimized,
-            isolated_storage: isolatedStorage
+            isolated_storage: isolatedStorage,
+            manager_log_to_file: managerFileLogging,
+            app_log_to_file: appFileLogging
         };
 
         await new Promise((resolve) => {
@@ -1295,6 +1330,12 @@ async function saveGeneralSettings() {
                 resolve();
             });
         });
+        savedManagerFileLogging = managerFileLogging;
+        if (managerLoggingChanged) {
+            showNotification(translations[currentLang].manager_logging_restart, 'success');
+            setTimeout(() => managerAPI.restartManager(managerFileLogging), 80);
+            return;
+        }
         showNotification(translations[currentLang].settings_saved || 'Настройки сохранены', 'success');
     } catch (error) {
         console.error('Error saving general settings:', error);

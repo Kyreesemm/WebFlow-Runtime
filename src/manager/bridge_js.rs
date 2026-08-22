@@ -50,7 +50,7 @@ pub const INJECTED_BRIDGE_JS: &str = r#"
     const methods = [
         'listApps', 'getAppConfig', 'createApp', 'updateApp',
         'createAppWithIcon', 'updateAppWithIcon', 'deleteApp',
-        'runApp', 'getRunningApps', 'listTemplates', 'createFromTemplate',
+        'runApp', 'restartManager', 'getRunningApps', 'listTemplates', 'createFromTemplate',
         'getEngineSettings', 'updateEngineSettings', 'changeUserdataPath', 'listUserAgents',
         'addUserAgent', 'deleteUserAgent', 'getWindowState', 'saveWindowState',
         'clearAppCache', 'clearAppData', 'clearAllCache', 'clearAllData',

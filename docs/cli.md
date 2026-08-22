@@ -21,6 +21,7 @@ webflow-runtime [OPTIONS]
 | `--help` | Display CLI help and exit. `-h` is also accepted. |
 | `--version` | Display the executable version and exit. `-V` is also accepted. |
 | `--autostart` | Internal flag used by operating-system autostart entries. It marks a Manager launch as system-initiated and is not intended for regular manual use. |
+| `--restart` | Internal flag used during Manager self-restart. It delays initialization briefly so the previous Manager process can release its instance lock. |
 
 ## Execution modes
 
