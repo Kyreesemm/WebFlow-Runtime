@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Corrected project and CLI author metadata to `KRM Tech Software`.
+
+---
+
 ## [v0.1.4-dev] - August 22nd, 2026
 
 ### Added
@@ -23,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed the CLI version output to follow the package version.
+
+---
 
 ## [v0.1.3-dev] - August 21st, 2026
 
@@ -41,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed new applications ignoring the default isolated storage setting.
 - Fixed storage cleanup buttons having different sizes and corrected the Russian cache label.
 - Fixed User-Agent strings overflowing their cards at the manager's minimum width.
+
+---
 
 ## [v0.1.2-dev] - August 20th, 2026
 
@@ -71,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Windows executable icon resource embedding for native Windows builds.
 - Resolved rendering lifecycle issues and improved engine performance and resource efficiency.
 - Minor bugs have been fixed in the Windows version.
+
+---
 
 ## [v0.1.0-dev] - August 14th, 2026
 

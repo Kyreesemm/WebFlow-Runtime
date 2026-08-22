@@ -124,4 +124,4 @@ installer.
 
 ---
 
-## *Development by Kyreesemm (KRM Tech Software)*
+## *Development by KRM Tech Software*

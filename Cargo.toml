@@ -3,7 +3,7 @@ name = "webflow-runtime"
 version = "0.1.4-dev"
 edition = "2021"
 build = "build.rs"
-authors = ["WebFlow Team"]
+authors = ["KRM Tech Software"]
 description = "Ultra-lightweight engine to turn websites into desktop applications"
 
 [[bin]]

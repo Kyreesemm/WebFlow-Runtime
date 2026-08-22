@@ -3,7 +3,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(
     name = "webflow-runtime",
-    author = "WebFlow Team",
+    author = "KRM Tech Software",
     version,
     about = "Ultra-lightweight engine to turn websites into desktop applications"
 )]
