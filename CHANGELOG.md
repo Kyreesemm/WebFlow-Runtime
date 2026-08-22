@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.4-dev] - August 22nd, 2026
+
 ### Added
 - Added developer settings for persistent manager and application file logging.
 - Added detailed manager debug logging for UI events, IPC requests and responses, JavaScript errors, and backend timings.
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File debug logging includes high-volume background events without enabling terminal output.
 
 ### Fixed
+- Fixed the CLI version output to follow the package version.
 
 ## [v0.1.3-dev] - August 21st, 2026
 

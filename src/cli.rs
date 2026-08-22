@@ -4,7 +4,7 @@ use clap::Parser;
 #[command(
     name = "webflow-runtime",
     author = "WebFlow Team",
-    version = "0.1.0",
+    version,
     about = "Ultra-lightweight engine to turn websites into desktop applications"
 )]
 pub struct CliArgs {
