@@ -935,8 +935,13 @@ body.theme-transitioning * {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 72px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
+}
+
+.settings-row > .toggle-group {
+    margin-bottom: 0;
 }
 
 .settings-row:last-child {

@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected project and CLI author metadata to `KRM Tech Software`.
 
 ### Changed
+- Restored the original vertical spacing of settings rows while keeping toggles centered.
+- Centered settings toggles relative to each option's title and description.
 - Split manager tray minimization and application tray minimization into separate settings, with application minimization dependent on application tray icons.
 - The minimum size of the manager window has been expanded to 850 pixels.
 
