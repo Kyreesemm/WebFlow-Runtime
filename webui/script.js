@@ -36,6 +36,7 @@ const translations = {
         general_settings: 'Общие параметры',
         project_tab: 'О проекте',
         project_branding_desc: 'Лёгкая кроссплатформенная среда для превращения веб-сайтов в приложения',
+        project_version_label: 'Версия',
         project_developer: 'Разработчик',
         project_license: 'Лицензия',
         project_version_title: 'Версия проекта',
@@ -168,6 +169,7 @@ const translations = {
         general_settings: 'General Settings',
         project_tab: 'About',
         project_branding_desc: 'A lightweight cross-platform environment for turning websites into applications',
+        project_version_label: 'Version',
         project_developer: 'Developer',
         project_license: 'License',
         project_version_title: 'Project Version',
@@ -368,11 +370,12 @@ function loadProjectInfo() {
             const info = JSON.parse(result);
             const versionElem = document.getElementById('project-version');
             const channelElem = document.getElementById('project-version-channel');
-            if (versionElem) versionElem.textContent = info.version || '—';
+            if (versionElem) versionElem.textContent = info.version ? `v${info.version}` : 'v—';
             if (channelElem) {
-                channelElem.textContent = (info.version || '').includes('dev')
+                const channel = (info.version || '').includes('dev')
                     ? translations[currentLang].version_channel_dev
                     : '';
+                channelElem.textContent = channel ? `(${channel})` : '';
             }
 
             const webkitElem = document.getElementById('webkitgtk-version');

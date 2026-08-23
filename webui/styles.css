@@ -2021,8 +2021,6 @@ body.theme-transitioning * {
 
 .project-branding {
     display: flex;
-    align-items: center;
-    gap: 24px;
 }
 
 .project-branding-icon {
@@ -2042,8 +2040,16 @@ body.theme-transitioning * {
 }
 
 .project-branding-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
     flex: 1;
     padding: 20px;
+}
+
+.project-branding-content {
+    flex: 1;
+    min-width: 0;
 }
 
 .project-branding-card h2 {
@@ -2107,7 +2113,17 @@ body.theme-transitioning * {
 }
 
 .project-status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
     color: var(--accent-orange);
+}
+
+.project-status-icon .material-symbols-rounded {
+    font-size: 32px;
 }
 
 .project-status-content {
@@ -2146,6 +2162,10 @@ body.theme-transitioning * {
 @media (max-width: 650px) {
     .project-branding {
         align-items: stretch;
+        flex-direction: column;
+    }
+
+    .project-branding-card {
         flex-direction: column;
     }
 
