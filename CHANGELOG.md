@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Corrected project and CLI author metadata to `KRM Tech Software`.
 
+### Changed
+- Split manager tray minimization and application tray minimization into separate settings, with application minimization dependent on application tray icons.
+
 ---
 
 ## [v0.1.4-dev] - August 22nd, 2026

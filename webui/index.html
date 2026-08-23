@@ -100,8 +100,8 @@
                 </div>
                 <div class="settings-row">
                     <div>
-                        <div class="settings-label" data-i18n="minimize_tray">Минимизация в трей</div>
-                        <div class="settings-description" data-i18n="minimize_tray_desc">Сворачивать приложения в системный трей</div>
+                        <div class="settings-label" data-i18n="manager_minimize_tray">Минимизация менеджера в трей</div>
+                        <div class="settings-description" data-i18n="manager_minimize_tray_desc">Сворачивать менеджер в системный трей при закрытии окна</div>
                     </div>
                     <div class="toggle-group">
                         <label class="toggle-switch">
@@ -118,6 +118,18 @@
                     <div class="toggle-group">
                         <label class="toggle-switch">
                             <input type="checkbox" id="setting-app-tray-icons" disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row feature-unavailable" id="app-minimize-tray-row">
+                    <div>
+                        <div class="settings-label" data-i18n="app_minimize_tray">Минимизация приложений в трей</div>
+                        <div class="settings-description" data-i18n="app_minimize_tray_desc">Сворачивать отдельные приложения в системный трей при закрытии окна</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-app-minimize-tray" disabled>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>

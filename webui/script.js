@@ -44,10 +44,12 @@ const translations = {
         autostart_desc: 'Запускать менеджер при старте системы',
         start_minimized: 'Запускать свёрнутым',
         start_minimized_desc: 'Запускать менеджер в системном трее при старте системы',
-        minimize_tray: 'Минимизация в трей',
-        minimize_tray_desc: 'Сворачивать менеджер и приложения в системный трей при закрытии',
+        manager_minimize_tray: 'Минимизация менеджера в трей',
+        manager_minimize_tray_desc: 'Сворачивать менеджер в системный трей при закрытии окна',
         app_tray_icons: 'Иконки приложений в трее',
         app_tray_icons_desc: 'Отображать отдельную иконку в системном трее для каждого запущенного приложения',
+        app_minimize_tray: 'Минимизация приложений в трей',
+        app_minimize_tray_desc: 'Сворачивать отдельные приложения в системный трей при закрытии окна',
         tray_apps_menu: 'Меню приложений в трее менеджера',
         tray_apps_menu_desc: 'Показывать список приложений в контекстном меню иконки трея менеджера',
         storage_mode: 'Режим хранилища',
@@ -156,10 +158,12 @@ const translations = {
         autostart_desc: 'Start manager on system startup',
         start_minimized: 'Start Minimized',
         start_minimized_desc: 'Start the manager in the system tray with the system',
-        minimize_tray: 'Minimize to Tray',
-        minimize_tray_desc: 'Minimize the manager and applications to the system tray when closing',
+        manager_minimize_tray: 'Minimize Manager to Tray',
+        manager_minimize_tray_desc: 'Minimize the Manager to the system tray when its window is closed',
         app_tray_icons: 'Application Tray Icons',
         app_tray_icons_desc: 'Show a separate system tray icon for each running application',
+        app_minimize_tray: 'Minimize Applications to Tray',
+        app_minimize_tray_desc: 'Minimize individual applications to the system tray when their windows are closed',
         tray_apps_menu: 'Manager Tray Apps Menu',
         tray_apps_menu_desc: 'Show list of applications in manager tray icon context menu',
         storage_mode: 'Storage Mode',
@@ -1189,6 +1193,17 @@ function updateStartMinimizedAvailability() {
     if (!available) startMinimizedElem.checked = false;
 }
 
+function updateAppMinimizeTrayAvailability() {
+    const appTrayIconsElem = document.getElementById('setting-app-tray-icons');
+    const appMinimizeElem = document.getElementById('setting-app-minimize-tray');
+    if (!appTrayIconsElem || !appMinimizeElem) return;
+
+    const available = appTrayIconsElem.checked && !appTrayIconsElem.disabled && !managerIsGnome;
+    appMinimizeElem.disabled = !available;
+    appMinimizeElem.closest('.settings-row')?.classList.toggle('feature-unavailable', !available);
+    if (!available) appMinimizeElem.checked = false;
+}
+
 async function loadEngineSettings() {
     try {
         // Проверяем, инициализирован ли API
@@ -1230,7 +1245,11 @@ async function loadEngineSettings() {
         updateStartMinimizedAvailability();
 
         const appTrayElem = document.getElementById('setting-app-tray-icons');
-        if (appTrayElem) appTrayElem.checked = false;
+        if (appTrayElem) appTrayElem.checked = !!settings.app_tray_icons;
+
+        const appMinimizeElem = document.getElementById('setting-app-minimize-tray');
+        if (appMinimizeElem) appMinimizeElem.checked = !!settings.app_minimize_to_tray;
+        updateAppMinimizeTrayAvailability();
 
         const trayAppsMenuElem = document.getElementById('setting-tray-apps-menu');
         if (trayAppsMenuElem) trayAppsMenuElem.checked = false;
@@ -1274,7 +1293,14 @@ async function loadEngineSettings() {
         }
         if (appTrayElem && !appTrayElem.dataset.listener) {
             appTrayElem.dataset.listener = 'true';
-            appTrayElem.addEventListener('change', saveGeneralSettings);
+            appTrayElem.addEventListener('change', () => {
+                updateAppMinimizeTrayAvailability();
+                saveGeneralSettings();
+            });
+        }
+        if (appMinimizeElem && !appMinimizeElem.dataset.listener) {
+            appMinimizeElem.dataset.listener = 'true';
+            appMinimizeElem.addEventListener('change', saveGeneralSettings);
         }
         if (trayAppsMenuElem && !trayAppsMenuElem.dataset.listener) {
             trayAppsMenuElem.dataset.listener = 'true';
@@ -1311,6 +1337,7 @@ async function saveGeneralSettings() {
         const googleOauthFallback = document.getElementById('setting-google-oauth-fallback')?.checked ?? true;
         const isolatedStorage = document.getElementById('setting-isolated-storage')?.checked ?? true;
         const startMinimized = document.getElementById('setting-start-minimized')?.checked ?? false;
+        const appMinimizeToTray = document.getElementById('setting-app-minimize-tray')?.checked || false;
         const managerFileLogging = document.getElementById('setting-manager-file-logging')?.checked ?? false;
         const appFileLogging = document.getElementById('setting-app-file-logging')?.checked ?? false;
         const managerLoggingChanged = managerFileLogging !== savedManagerFileLogging;
@@ -1319,6 +1346,8 @@ async function saveGeneralSettings() {
         const settings = {
             autostart,
             minimize_to_tray: minimizeToTray,
+            app_tray_icons: appTrayIcons,
+            app_minimize_to_tray: appMinimizeToTray,
             start_minimized: startMinimized,
             isolated_storage: isolatedStorage,
             manager_log_to_file: managerFileLogging,
