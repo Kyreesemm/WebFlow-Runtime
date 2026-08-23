@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.2.0-dev] - August 24th, 2026
+
 ### Added
 - Added a manager setting to confirm and enable update checks on every GUI startup.
 - Added the project information tab with branding, version, runtime component information, update status, and project links.
