@@ -369,8 +369,11 @@
                         <span class="material-symbols-rounded">update</span>
                     </div>
                     <div class="project-status-content">
-                        <div class="settings-label" id="project-update-status" data-i18n="updates_unavailable">Автоматическая проверка обновлений пока недоступна</div>
-                        <div class="settings-description" data-i18n="updates_unavailable_desc">Проверка релизов и установка обновлений появятся позднее</div>
+                        <div class="settings-label" id="project-update-status">Проверка обновлений...</div>
+                        <div class="settings-description" id="project-update-description">Проверка релизов...</div>
+                        <div class="project-update-progress" id="project-update-progress" hidden>
+                            <div class="project-update-progress-bar" id="project-update-progress-bar"></div>
+                        </div>
                     </div>
                     <button class="btn" id="project-update-button" disabled>
                         <span class="material-symbols-rounded">download</span>

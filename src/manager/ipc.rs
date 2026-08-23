@@ -254,6 +254,18 @@ pub fn handle_ipc_message(
             });
             send_response(&webview_handle, id, &info.to_string());
         }
+        "checkForUpdates" => {
+            let force = args.first().and_then(Value::as_bool).unwrap_or(false);
+            crate::updater::start_check(force);
+            send_response(&webview_handle, id, &serde_json::to_string(&crate::updater::state()).unwrap_or_else(|_| "{}".into()));
+        }
+        "getUpdateState" => {
+            send_response(&webview_handle, id, &serde_json::to_string(&crate::updater::state()).unwrap_or_else(|_| "{}".into()));
+        }
+        "startUpdate" => {
+            crate::updater::start_update();
+            send_response(&webview_handle, id, "true");
+        }
         "openProjectLink" => {
             if let Some(url) = args.first().and_then(Value::as_str) {
                 let allowed = matches!(
@@ -592,6 +604,7 @@ fn send_response(webview_handle: &Arc<Mutex<Option<WebView>>>, id: u64, json_dat
         }
     }
 }
+
 
 fn format_size(bytes: u64) -> String {
     // Use decimal units to match the values shown by Nautilus.

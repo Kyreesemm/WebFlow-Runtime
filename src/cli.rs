@@ -32,6 +32,14 @@ pub struct CliArgs {
     #[arg(long, hide = true)]
     pub restart: bool,
 
+    /// Internal updater helper mode
+    #[arg(long, hide = true, value_name = "ARCHIVE")]
+    pub update_helper: Option<String>,
+
+    /// PID of the Manager process that must exit before installation
+    #[arg(long, hide = true, value_name = "PID")]
+    pub update_parent_pid: Option<u32>,
+
     /// Create application from template ID
     #[arg(long, value_name = "TEMPLATE_ID")]
     pub create_from_template: Option<String>,

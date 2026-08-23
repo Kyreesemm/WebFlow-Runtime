@@ -6,6 +6,7 @@ mod config;
 mod debug;
 mod instance;
 mod manager;
+mod updater;
 mod tray;
 mod window;
 
@@ -36,6 +37,13 @@ fn main() {
     }
 
     let args = CliArgs::parse();
+    if let Some(archive) = args.update_helper.as_deref() {
+        if let Err(error) = updater::run_update_helper(archive, args.update_parent_pid) {
+            eprintln!("Update installation failed: {error}");
+            std::process::exit(1);
+        }
+        return;
+    }
     if args.restart {
         std::thread::sleep(std::time::Duration::from_millis(300));
     }

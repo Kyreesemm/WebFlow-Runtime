@@ -96,3 +96,16 @@ When mutually exclusive mode-selecting options are provided together, the runtim
 4. Manager mode
 
 The process exits with a non-zero status when the selected operation fails.
+
+## Automatic updates
+
+Manager mode checks the public GitHub Releases endpoint for a compatible update in the background. No GitHub token or API key is required.
+
+- A pre-release build accepts newer pre-release and stable releases.
+- A stable build accepts newer stable releases and ignores pre-releases.
+- Release checks are cached for up to 12 hours.
+- The Manager selects the Linux or Windows portable archive for the current platform.
+- Downloads are verified using the SHA-256 digest reported by GitHub before installation.
+- Installation is performed by an internal helper process after the Manager exits. User data and `userdata/` are preserved.
+
+The internal updater options `--update-helper` and `--update-parent-pid` are hidden and are not intended for regular CLI use.

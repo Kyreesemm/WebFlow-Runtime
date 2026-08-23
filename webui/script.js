@@ -3,6 +3,7 @@ window.currentImportedCookies = [];
 let defaultIsolatedStorage = true;
 let managerIsGnome = false;
 let savedManagerFileLogging = false;
+let updateAvailable = false;
 
 // Переводы
 const translations = {
@@ -41,9 +42,21 @@ const translations = {
         project_license: 'Лицензия',
         project_version_title: 'Версия проекта',
         project_updates_title: 'Обновления',
-        updates_unavailable: 'Автоматическая проверка обновлений пока недоступна',
-        updates_unavailable_desc: 'Проверка релизов и установка обновлений появятся позднее',
+        updates_checking: 'Проверка обновлений...',
+        updates_checking_desc: 'Получение информации о релизах GitHub',
+        updates_current: 'Установлена актуальная версия',
+        updates_current_desc: 'Новых совместимых релизов не найдено',
+        updates_available: 'Доступно обновление до {version}',
+        updates_available_desc: 'Доступен совместимый релиз для этой системы',
+        updates_error: 'Не удалось проверить обновления',
+        updates_downloading: 'Скачивание обновления...',
+        updates_verifying: 'Проверка целостности...',
+        updates_restarting: 'Перезапуск WebFlow Runtime...',
+        updates_error_desc: 'Повторите попытку позже',
         update_button: 'Обновить',
+        check_updates_button: 'Проверить обновления',
+        update_found_notification: 'Доступно обновление до {version}',
+        updates_current_notification: 'Установлена актуальная версия',
         runtime_components_title: 'Компоненты WebView',
         component_only_linux: 'Доступно только в Linux',
         component_only_windows: 'Доступно только в Windows',
@@ -174,9 +187,21 @@ const translations = {
         project_license: 'License',
         project_version_title: 'Project Version',
         project_updates_title: 'Updates',
-        updates_unavailable: 'Automatic update checks are not available yet',
-        updates_unavailable_desc: 'Release checks and update installation will be added later',
+        updates_checking: 'Checking for updates...',
+        updates_checking_desc: 'Fetching release information from GitHub',
+        updates_current: 'The latest version is installed',
+        updates_current_desc: 'No newer compatible release was found',
+        updates_available: 'Update available: {version}',
+        updates_available_desc: 'A compatible release is available for this system',
+        updates_error: 'Update check failed',
+        updates_downloading: 'Downloading update...',
+        updates_verifying: 'Verifying update integrity...',
+        updates_restarting: 'Restarting WebFlow Runtime...',
+        updates_error_desc: 'Please try again later',
         update_button: 'Update',
+        check_updates_button: 'Check for Updates',
+        update_found_notification: 'Update available: {version}',
+        updates_current_notification: 'The latest version is already installed',
         runtime_components_title: 'WebView Components',
         component_only_linux: 'Available only on Linux',
         component_only_windows: 'Available only on Windows',
@@ -401,7 +426,134 @@ function loadProjectInfo() {
             console.error('Error loading project information:', error);
         }
     });
+    checkForUpdates(false);
 }
+
+function setUpdateStatus(status, description, canUpdate = false, action = 'check') {
+    const statusElement = document.getElementById('project-update-status');
+    const descriptionElement = document.getElementById('project-update-description');
+    const button = document.getElementById('project-update-button');
+    if (statusElement) statusElement.textContent = status;
+    if (descriptionElement) descriptionElement.textContent = description;
+    if (button) {
+        button.disabled = !canUpdate;
+        button.className = action === 'update' ? 'btn' : 'btn btn-secondary';
+        button.innerHTML = `<span class="material-symbols-rounded">${action === 'update' ? 'download' : 'refresh'}</span><span>${action === 'update' ? translations[currentLang].update_button : translations[currentLang].check_updates_button}</span>`;
+    }
+}
+
+function checkForUpdates(force = false, notify = false) {
+    if (!managerAPI?.checkForUpdates) return;
+    let notificationSent = false;
+    setUpdateStatus(translations[currentLang].updates_checking, translations[currentLang].updates_checking_desc);
+    managerAPI.checkForUpdates(force, function(result) {
+        applyUpdateState(result, false);
+        if (managerAPI.getUpdateState) {
+            let attempts = 0;
+            const poll = setInterval(() => {
+                managerAPI.getUpdateState(state => {
+                    let parsed;
+                    try { parsed = JSON.parse(state); } catch (_) { parsed = null; }
+                    const shouldNotify = notify && !notificationSent && parsed && parsed.status !== 'checking';
+                    applyUpdateState(state, shouldNotify);
+                    if (shouldNotify) notificationSent = true;
+                    attempts += 1;
+                    if (!parsed || parsed.status !== 'checking' || attempts >= 120) clearInterval(poll);
+                });
+            }, 500);
+        }
+    });
+}
+
+function applyUpdateState(result, notify = false) {
+    try {
+            const state = JSON.parse(result);
+            const update = state.result || state;
+            if (state.status === 'checking') return;
+            if (update.status === 'update_available') {
+                updateAvailable = true;
+                setUpdateStatus(
+                    translations[currentLang].updates_available.replace('{version}', `v${update.latest_version}`),
+                    translations[currentLang].updates_available_desc,
+                    true,
+                    'update'
+                );
+                if (notify) showNotification(translations[currentLang].update_found_notification.replace('{version}', `v${update.latest_version}`), 'success');
+            } else if (update.status === 'up_to_date') {
+                updateAvailable = false;
+                setUpdateStatus(translations[currentLang].updates_current, translations[currentLang].updates_current_desc, true, 'check');
+                if (notify) showNotification(translations[currentLang].updates_current_notification, 'success');
+            } else {
+                updateAvailable = false;
+                setUpdateStatus(translations[currentLang].updates_error, state.message || update.error || translations[currentLang].updates_error_desc, true, 'check');
+            }
+            if (['downloading', 'verifying', 'verified', 'restarting'].includes(state.status)) {
+                const progress = document.getElementById('project-update-progress');
+                const bar = document.getElementById('project-update-progress-bar');
+                if (progress) progress.hidden = false;
+                if (bar) bar.style.width = `${state.percent || 0}%`;
+                setUpdateStatus(
+                    state.status === 'verifying' || state.status === 'verified' ? translations[currentLang].updates_verifying :
+                        state.status === 'restarting' ? translations[currentLang].updates_restarting : translations[currentLang].updates_downloading,
+                    state.message || '',
+                    false,
+                    'update'
+                );
+            } else if (state.status === 'error') {
+                updateAvailable = false;
+                setUpdateStatus(translations[currentLang].updates_error, state.message || translations[currentLang].updates_error_desc, true, 'check');
+            }
+        } catch (_) {
+            setUpdateStatus(translations[currentLang].updates_error, translations[currentLang].updates_error_desc);
+        }
+}
+
+function startUpdate() {
+    const button = document.getElementById('project-update-button');
+    const progress = document.getElementById('project-update-progress');
+    if (button) button.disabled = true;
+    if (progress) progress.hidden = false;
+    setUpdateStatus(translations[currentLang].updates_downloading, translations[currentLang].updates_available_desc, false, 'update');
+    managerAPI?.startUpdate?.(() => {});
+    let attempts = 0;
+    const poll = setInterval(() => {
+        managerAPI?.getUpdateState?.(state => {
+            applyUpdateState(state);
+            attempts += 1;
+            let parsed;
+            try { parsed = JSON.parse(state); } catch (_) { parsed = null; }
+            if (!parsed || ['error', 'restarting'].includes(parsed.status) || attempts >= 360) clearInterval(poll);
+        });
+    }, 500);
+}
+
+function handleUpdateButton() {
+    if (updateAvailable) startUpdate();
+    else checkForUpdates(true, true);
+}
+
+document.getElementById('project-update-button')?.addEventListener('click', handleUpdateButton);
+
+window.__webflowUpdateProgress = function(update) {
+    const bar = document.getElementById('project-update-progress-bar');
+    const statusElement = document.getElementById('project-update-status');
+    const descriptionElement = document.getElementById('project-update-description');
+    const progress = document.getElementById('project-update-progress');
+    if (progress) progress.hidden = false;
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, update.percent || 0))}%`;
+    if (update.phase === 'verifying' || update.phase === 'verified') {
+        if (statusElement) statusElement.textContent = translations[currentLang].updates_verifying;
+    } else if (update.phase === 'restarting') {
+        if (statusElement) statusElement.textContent = translations[currentLang].updates_restarting;
+    } else if (update.phase === 'error') {
+        if (statusElement) statusElement.textContent = translations[currentLang].updates_error;
+        if (descriptionElement) descriptionElement.textContent = update.message || translations[currentLang].updates_error_desc;
+        if (progress) progress.hidden = true;
+        const button = document.getElementById('project-update-button');
+        if (button) button.disabled = false;
+    }
+    if (update.phase !== 'error' && descriptionElement && update.message) descriptionElement.textContent = update.message;
+};
 
 function openProjectLink(url) {
     if (managerAPI?.openProjectLink) managerAPI.openProjectLink(url);
