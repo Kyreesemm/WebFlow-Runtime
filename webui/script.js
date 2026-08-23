@@ -34,6 +34,24 @@ const translations = {
         useragent_string: 'User-Agent строка',
         add: 'Добавить',
         general_settings: 'Общие параметры',
+        project_tab: 'О проекте',
+        project_branding_desc: 'Лёгкая кроссплатформенная среда для превращения веб-сайтов в приложения',
+        project_developer: 'Разработчик',
+        project_license: 'Лицензия',
+        project_version_title: 'Версия проекта',
+        project_updates_title: 'Обновления',
+        updates_unavailable: 'Автоматическая проверка обновлений пока недоступна',
+        updates_unavailable_desc: 'Проверка релизов и установка обновлений появятся позднее',
+        update_button: 'Обновить',
+        runtime_components_title: 'Компоненты WebView',
+        component_only_linux: 'Доступно только в Linux',
+        component_only_windows: 'Доступно только в Windows',
+        component_version_unavailable: 'Версия недоступна',
+        project_links_title: 'Ссылки проекта',
+        github_link: 'GitHub',
+        documentation_link: 'Документация',
+        issues_link: 'Issues',
+        version_channel_dev: 'dev-сборка',
         developer_settings: 'Для разработчиков',
         manager_file_logging: 'Сохранять логи менеджера в файл',
         manager_file_logging_desc: 'Записывать подробные логи каждого запуска менеджера в папку logs',
@@ -148,6 +166,24 @@ const translations = {
         useragent_string: 'User-Agent String',
         add: 'Add',
         general_settings: 'General Settings',
+        project_tab: 'About',
+        project_branding_desc: 'A lightweight cross-platform environment for turning websites into applications',
+        project_developer: 'Developer',
+        project_license: 'License',
+        project_version_title: 'Project Version',
+        project_updates_title: 'Updates',
+        updates_unavailable: 'Automatic update checks are not available yet',
+        updates_unavailable_desc: 'Release checks and update installation will be added later',
+        update_button: 'Update',
+        runtime_components_title: 'WebView Components',
+        component_only_linux: 'Available only on Linux',
+        component_only_windows: 'Available only on Windows',
+        component_version_unavailable: 'Version unavailable',
+        project_links_title: 'Project Links',
+        github_link: 'GitHub',
+        documentation_link: 'Documentation',
+        issues_link: 'Issues',
+        version_channel_dev: 'dev build',
         developer_settings: 'For Developers',
         manager_file_logging: 'Save Manager Logs to File',
         manager_file_logging_desc: 'Write detailed logs for every manager launch to the logs folder',
@@ -271,6 +307,7 @@ function applyTranslations() {
     });
 
     populateCookieBrowserOptions();
+    updateProjectComponentLabels();
 
     // Обновить tooltips для вкладок
     document.querySelectorAll('.tab-icon').forEach(tab => {
@@ -280,7 +317,8 @@ function applyTranslations() {
             settings: currentLang === 'ru' ? 'Общие настройки' : 'General Settings',
             storage: currentLang === 'ru' ? 'Хранилище' : 'Storage',
             useragents: currentLang === 'ru' ? 'User-Agent\'ы' : 'User-Agents',
-            engine: currentLang === 'ru' ? 'Настройки движка' : 'Engine Settings'
+            engine: currentLang === 'ru' ? 'Настройки движка' : 'Engine Settings',
+            project: translations[currentLang].project_tab
         };
         if (tooltips[tabName]) {
             tab.setAttribute('title', tooltips[tabName]);
@@ -307,6 +345,63 @@ function applyTranslations() {
     // Обновить file input (это делается через CSS, но текст нужно обновить через JS)
     // Браузер не позволяет менять текст file input напрямую, это ограничение безопасности
     updateFileInputLabel();
+}
+
+function updateProjectComponentLabels() {
+    const webkit = document.getElementById('webkitgtk-version');
+    const webview2 = document.getElementById('webview2-version');
+    if (!webkit || !webview2) return;
+
+    if (navigator.userAgent.includes('Edg/')) {
+        webkit.textContent = translations[currentLang].component_only_linux;
+        webkit.dataset.platformOnly = 'linux';
+    } else {
+        webview2.textContent = translations[currentLang].component_only_windows;
+        webview2.dataset.platformOnly = 'windows';
+    }
+}
+
+function loadProjectInfo() {
+    if (!managerAPI || !managerAPI.getRuntimeInfo) return;
+    managerAPI.getRuntimeInfo(function(result) {
+        try {
+            const info = JSON.parse(result);
+            const versionElem = document.getElementById('project-version');
+            const channelElem = document.getElementById('project-version-channel');
+            if (versionElem) versionElem.textContent = info.version || '—';
+            if (channelElem) {
+                channelElem.textContent = (info.version || '').includes('dev')
+                    ? translations[currentLang].version_channel_dev
+                    : '';
+            }
+
+            const webkitElem = document.getElementById('webkitgtk-version');
+            const webview2Elem = document.getElementById('webview2-version');
+            const isWindowsWebView = navigator.userAgent.includes('Edg/');
+            if (isWindowsWebView) {
+                const match = navigator.userAgent.match(/Edg\/([\d.]+)/);
+                if (webkitElem) {
+                    webkitElem.textContent = translations[currentLang].component_only_linux;
+                    webkitElem.dataset.platformOnly = 'linux';
+                }
+                if (webview2Elem) {
+                    webview2Elem.textContent = match ? match[1] : translations[currentLang].component_version_unavailable;
+                }
+            } else {
+                if (webkitElem) webkitElem.textContent = info.webkitgtk_version || translations[currentLang].component_version_unavailable;
+                if (webview2Elem) {
+                    webview2Elem.textContent = translations[currentLang].component_only_windows;
+                    webview2Elem.dataset.platformOnly = 'windows';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading project information:', error);
+        }
+    });
+}
+
+function openProjectLink(url) {
+    if (managerAPI?.openProjectLink) managerAPI.openProjectLink(url);
 }
 
 // Заполняем выбор User-Agent тем же встроенным списком, который показывает
@@ -381,6 +476,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
     managerAPI = channel.objects.managerAPI;
     console.log('WebChannel connected');
     loadEngineSettings();
+    loadProjectInfo();
     populateBuiltInUserAgents();
 
     // Подписываемся на сигнал изменения списка приложений

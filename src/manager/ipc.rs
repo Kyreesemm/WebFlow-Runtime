@@ -231,6 +231,43 @@ pub fn handle_ipc_message(
             }
             send_response(&webview_handle, id, &serde_json::to_string(&val).unwrap_or_else(|_| "{}".into()));
         }
+        "getRuntimeInfo" => {
+            #[cfg(target_os = "linux")]
+            let webkitgtk_version = {
+                unsafe {
+                    Value::String(format!(
+                        "{}.{}.{}",
+                        webkit2gtk::ffi::webkit_get_major_version(),
+                        webkit2gtk::ffi::webkit_get_minor_version(),
+                        webkit2gtk::ffi::webkit_get_micro_version()
+                    ))
+                }
+            };
+            #[cfg(not(target_os = "linux"))]
+            let webkitgtk_version = Value::Null;
+
+            let info = serde_json::json!({
+                "version": env!("CARGO_PKG_VERSION"),
+                "platform": std::env::consts::OS,
+                "webkitgtk_version": webkitgtk_version,
+                "webview2_version": Value::Null
+            });
+            send_response(&webview_handle, id, &info.to_string());
+        }
+        "openProjectLink" => {
+            if let Some(url) = args.first().and_then(Value::as_str) {
+                let allowed = matches!(
+                    url,
+                    "https://github.com/Kyreesemm/WebFlow-Runtime"
+                        | "https://github.com/Kyreesemm/WebFlow-Runtime/issues"
+                );
+                if allowed && open::that(url).is_ok() {
+                    send_response(&webview_handle, id, "true");
+                    return;
+                }
+            }
+            send_response(&webview_handle, id, "false");
+        }
         "updateEngineSettings" => {
             if let Some(val) = args.get(0) {
                 let incoming: Result<Value, _> = if val.is_string() {

@@ -16,7 +16,7 @@ pub enum WindowFrameStyle {
 
 pub const APP_MIN_WIDTH: u32 = 700;
 pub const APP_MIN_HEIGHT: u32 = 480;
-pub const MANAGER_MIN_WIDTH: u32 = 800;
+pub const MANAGER_MIN_WIDTH: u32 = 850;
 pub const MANAGER_MIN_HEIGHT: u32 = 480;
 pub const MAX_WINDOW_WIDTH: u32 = 7680;
 pub const MAX_WINDOW_HEIGHT: u32 = 4320;

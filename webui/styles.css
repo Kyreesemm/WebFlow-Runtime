@@ -2011,3 +2011,149 @@ body.theme-transitioning * {
     padding-top: 20px;
     border-top: 1px solid var(--border);
 }
+
+/* Project information tab */
+.project-branding,
+.project-info-section {
+    max-width: 800px;
+    margin: 0 auto 20px;
+}
+
+.project-branding {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.project-branding-icon {
+    width: 144px;
+    height: 144px;
+    object-fit: contain;
+    flex: 0 0 144px;
+}
+
+.project-branding-card,
+.project-version-card,
+.project-status-card,
+.runtime-component-card {
+    background: var(--gradient-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.project-branding-card {
+    flex: 1;
+    padding: 20px;
+}
+
+.project-branding-card h2 {
+    margin: 0 0 8px;
+    color: var(--accent-orange);
+    font-size: 22px;
+}
+
+.project-branding-card p {
+    margin: 0 0 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.project-branding-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.project-branding-meta strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.project-info-section h3 {
+    margin: 0 0 12px;
+    color: var(--accent-orange);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.project-version-card {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 16px 20px;
+}
+
+.project-version-value {
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.project-version-channel {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.project-status-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+}
+
+.project-status-icon {
+    color: var(--accent-orange);
+}
+
+.project-status-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.runtime-components {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.runtime-component-card {
+    padding: 16px 20px;
+}
+
+.runtime-component-name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.runtime-component-version {
+    margin-top: 7px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 650px) {
+    .project-branding {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .project-branding-icon {
+        align-self: center;
+    }
+
+    .runtime-components {
+        grid-template-columns: 1fr;
+    }
+}

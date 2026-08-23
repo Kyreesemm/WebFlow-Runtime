@@ -36,6 +36,9 @@
                 <button class="tab-icon" data-tab="engine" title="Настройки движка">
                     <span class="material-symbols-rounded">tune</span>
                 </button>
+                <button class="tab-icon" data-tab="project" title="О проекте">
+                    <span class="material-symbols-rounded">info</span>
+                </button>
             </div>
             <div class="header-actions">
                 <button class="lang-toggle" onclick="toggleLanguage()" title="Язык">
@@ -330,6 +333,82 @@
                     <button class="btn btn-secondary" onclick="loadEngineSettings()">
                         <span class="material-symbols-rounded">refresh</span>
                         <span data-i18n="reload_settings">Обновить</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Project -->
+        <div id="tab-project" class="tab-content">
+            <div class="project-branding">
+                <img class="project-branding-icon" src="webflow://manager/materials/default/webflow_runtime_icon.png" alt="WebFlow Runtime">
+                <div class="project-branding-card">
+                    <h2>WebFlow Runtime</h2>
+                    <p data-i18n="project_branding_desc">Лёгкая кроссплатформенная среда для превращения веб-сайтов в приложения</p>
+                    <div class="project-branding-meta">
+                        <span data-i18n="project_developer">Разработчик</span>
+                        <strong>KRM Tech Software</strong>
+                    </div>
+                    <div class="project-branding-meta">
+                        <span data-i18n="project_license">Лицензия</span>
+                        <strong>MIT</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-info-section">
+                <h3 data-i18n="project_version_title">Версия проекта</h3>
+                <div class="project-version-card">
+                    <span class="project-version-value" id="project-version">—</span>
+                    <span class="project-version-channel" id="project-version-channel">—</span>
+                </div>
+            </div>
+
+            <div class="project-info-section">
+                <h3 data-i18n="project_updates_title">Обновления</h3>
+                <div class="project-status-card">
+                    <div class="project-status-icon">
+                        <span class="material-symbols-rounded">update</span>
+                    </div>
+                    <div class="project-status-content">
+                        <div class="settings-label" id="project-update-status" data-i18n="updates_unavailable">Автоматическая проверка обновлений пока недоступна</div>
+                        <div class="settings-description" data-i18n="updates_unavailable_desc">Проверка релизов и установка обновлений появятся позднее</div>
+                    </div>
+                    <button class="btn btn-secondary" id="project-update-button" disabled>
+                        <span class="material-symbols-rounded">download</span>
+                        <span data-i18n="update_button">Обновить</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="project-info-section">
+                <h3 data-i18n="runtime_components_title">Компоненты WebView</h3>
+                <div class="runtime-components">
+                    <div class="runtime-component-card">
+                        <div class="runtime-component-name">WebKitGTK</div>
+                        <div class="runtime-component-version" id="webkitgtk-version">—</div>
+                    </div>
+                    <div class="runtime-component-card">
+                        <div class="runtime-component-name">Edge WebView2</div>
+                        <div class="runtime-component-version" id="webview2-version">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-info-section">
+                <h3 data-i18n="project_links_title">Ссылки проекта</h3>
+                <div class="project-links">
+                    <button class="btn btn-secondary" onclick="openProjectLink('https://github.com/Kyreesemm/WebFlow-Runtime')">
+                        <span class="material-symbols-rounded">code</span>
+                        <span data-i18n="github_link">GitHub</span>
+                    </button>
+                    <button class="btn btn-secondary" disabled>
+                        <span class="material-symbols-rounded">menu_book</span>
+                        <span data-i18n="documentation_link">Документация</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="openProjectLink('https://github.com/Kyreesemm/WebFlow-Runtime/issues')">
+                        <span class="material-symbols-rounded">bug_report</span>
+                        <span data-i18n="issues_link">Issues</span>
                     </button>
                 </div>
             </div>

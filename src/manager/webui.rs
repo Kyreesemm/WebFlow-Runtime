@@ -18,6 +18,16 @@ pub fn handle_custom_protocol_request(path: &str) -> Response<Cow<'static, [u8]>
         clean_path.trim_start_matches('/')
     };
 
+    if file_path == "materials/default/webflow_runtime_icon.png" {
+        return Response::builder()
+            .status(200)
+            .header("Content-Type", "image/png")
+            .body(Cow::Borrowed(&include_bytes!(
+                "../../materials/default/webflow_runtime_icon.png"
+            )[..]))
+            .unwrap();
+    }
+
     if let Some(asset) = WebUIAssets::get(file_path) {
         let mime = mime_guess::from_path(file_path)
             .first_or_text_plain()

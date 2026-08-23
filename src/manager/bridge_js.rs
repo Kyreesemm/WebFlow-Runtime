@@ -51,7 +51,7 @@ pub const INJECTED_BRIDGE_JS: &str = r#"
         'listApps', 'getAppConfig', 'createApp', 'updateApp',
         'createAppWithIcon', 'updateAppWithIcon', 'deleteApp',
         'runApp', 'restartManager', 'getRunningApps', 'listTemplates', 'createFromTemplate',
-        'getEngineSettings', 'updateEngineSettings', 'changeUserdataPath', 'listUserAgents',
+        'getEngineSettings', 'updateEngineSettings', 'getRuntimeInfo', 'openProjectLink', 'changeUserdataPath', 'listUserAgents',
         'addUserAgent', 'deleteUserAgent', 'getWindowState', 'saveWindowState',
         'clearAppCache', 'clearAppData', 'clearAllCache', 'clearAllData',
         'getTotalCacheSize', 'getTotalDataSize', 'getAppStorageSizes', 'selectFolder', 'openFolder',
