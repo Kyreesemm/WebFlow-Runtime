@@ -407,6 +407,24 @@ function openProjectLink(url) {
     if (managerAPI?.openProjectLink) managerAPI.openProjectLink(url);
 }
 
+function setupBrandingIconTilt() {
+    const icon = document.querySelector('.project-branding-icon');
+    if (!icon || icon.dataset.tiltReady) return;
+    icon.dataset.tiltReady = 'true';
+
+    icon.addEventListener('mousemove', event => {
+        const bounds = icon.getBoundingClientRect();
+        const offsetX = (event.clientX - bounds.left) / bounds.width - 0.5;
+        const offsetY = (event.clientY - bounds.top) / bounds.height - 0.5;
+        icon.style.setProperty('--tilt-x', `${(-offsetY * 8).toFixed(2)}deg`);
+        icon.style.setProperty('--tilt-y', `${(offsetX * 8).toFixed(2)}deg`);
+    });
+    icon.addEventListener('mouseleave', () => {
+        icon.style.setProperty('--tilt-x', '0deg');
+        icon.style.setProperty('--tilt-y', '0deg');
+    });
+}
+
 // Заполняем выбор User-Agent тем же встроенным списком, который показывает
 // вкладка User-Agent'ов. Пользовательские записи намеренно не добавляются.
 function populateBuiltInUserAgents(selectedId = 'default') {
@@ -548,6 +566,7 @@ document.body.setAttribute('data-theme', savedTheme);
 
 // Управление вкладками (иконки в header)
 document.addEventListener('DOMContentLoaded', function() {
+    setupBrandingIconTilt();
     document.querySelectorAll('.tab-icon').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.getAttribute('data-tab');

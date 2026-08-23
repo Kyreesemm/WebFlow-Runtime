@@ -2024,10 +2024,18 @@ body.theme-transitioning * {
 }
 
 .project-branding-icon {
-    width: 144px;
-    height: 144px;
+    width: 156px;
+    height: 156px;
     object-fit: contain;
-    flex: 0 0 144px;
+    flex: 0 0 156px;
+    filter: drop-shadow(0 0 10px rgba(255, 184, 154, 0.34));
+    transform: perspective(600px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 120ms ease-out, filter 220ms ease;
+    will-change: transform;
+}
+
+.project-branding-icon:hover {
+    filter: drop-shadow(0 0 14px rgba(255, 184, 154, 0.52));
 }
 
 .project-branding-card,
@@ -2138,7 +2146,17 @@ body.theme-transitioning * {
 }
 
 .runtime-component-card {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    column-gap: 12px;
+    align-items: center;
     padding: 16px 20px;
+}
+
+.runtime-component-icon {
+    grid-row: span 2;
+    color: var(--accent-orange);
+    font-size: 28px;
 }
 
 .runtime-component-name {
@@ -2148,7 +2166,7 @@ body.theme-transitioning * {
 }
 
 .runtime-component-version {
-    margin-top: 7px;
+    margin-top: 4px;
     color: var(--text-secondary);
     font-size: 13px;
 }
