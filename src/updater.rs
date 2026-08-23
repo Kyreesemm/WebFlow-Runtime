@@ -341,14 +341,15 @@ fn process_is_running(pid: u32) -> bool {
     #[cfg(target_os = "windows")]
     {
         use windows_sys::Win32::Foundation::CloseHandle;
-        use windows_sys::Win32::System::Threading::{GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, STILL_ACTIVE};
+        use windows_sys::Win32::System::Threading::{GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+        const STILL_ACTIVE_CODE: u32 = 259;
         unsafe {
             let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
             if handle.is_null() { return false; }
             let mut code = 0;
             let ok = GetExitCodeProcess(handle, &mut code) != 0;
             CloseHandle(handle);
-            ok && code == STILL_ACTIVE as u32
+            ok && code == STILL_ACTIVE_CODE
         }
     }
     #[cfg(not(any(target_os = "linux", target_os = "windows")))]

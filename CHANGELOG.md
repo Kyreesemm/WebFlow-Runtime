@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the project information tab with branding, version, runtime component information, update status, and project links.
 - Added public GitHub release checks, compatible platform asset selection, SHA-256 verification, download progress, and cross-platform self-update installation.
 - Changed the update action to become a gray “Check for Updates” button when the installed version is current, with in-app notifications for manual check results.
+- Fixed Windows updater-helper compilation with the current `windows-sys` API.
 
 ### Fixed
 - Corrected project and CLI author metadata to `KRM Tech Software`.
