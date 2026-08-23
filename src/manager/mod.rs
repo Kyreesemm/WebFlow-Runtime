@@ -181,6 +181,9 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
     create_webview(&window, webview_handle.clone(), debug, debug_verbose)?;
 
     let engine_settings = crate::config::Config::load_engine_settings();
+    if engine_settings.check_updates_on_startup {
+        crate::updater::start_check(true);
+    }
     let mut tray_enabled = engine_settings.minimize_to_tray;
     let mut tray = if tray_enabled {
         match ManagerTray::create(MANAGER_ICON_BYTES) {

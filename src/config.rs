@@ -103,6 +103,8 @@ pub struct EngineSettings {
     pub manager_log_to_file: bool,
     #[serde(default)]
     pub app_log_to_file: bool,
+    #[serde(default)]
+    pub check_updates_on_startup: bool,
 }
 
 impl Default for EngineSettings {
@@ -119,6 +121,7 @@ impl Default for EngineSettings {
             google_oauth_fallback: false,
             manager_log_to_file: false,
             app_log_to_file: false,
+            check_updates_on_startup: false,
         }
     }
 }

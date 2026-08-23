@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added a manager setting to confirm and enable update checks on every GUI startup.
 - Added the project information tab with branding, version, runtime component information, update status, and project links.
 - Added public GitHub release checks, compatible platform asset selection, SHA-256 verification, download progress, and cross-platform self-update installation.
 - Changed the update action to become a gray “Check for Updates” button when the installed version is current, with in-app notifications for manual check results.

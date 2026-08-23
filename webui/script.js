@@ -35,6 +35,13 @@ const translations = {
         useragent_string: 'User-Agent строка',
         add: 'Добавить',
         general_settings: 'Общие параметры',
+        update_settings_title: 'Параметры обновлений',
+        check_updates_on_startup: 'Проверять обновления при запуске менеджера',
+        check_updates_on_startup_desc: 'Проверять наличие новой версии при каждом запуске WebFlow Runtime Manager',
+        check_updates_on_startup_warning: 'При включении этой функции частые перезапуски менеджера могут привести к блокировке проверки обновлений на сутки. Включайте эту настройку с осторожностью.',
+        enable: 'Включить',
+        updates_not_checked: 'Проверка не выполнялась',
+        updates_not_checked_desc: 'Запустите проверку вручную или включите её при запуске менеджера',
         project_tab: 'О проекте',
         project_branding_desc: 'Лёгкая кроссплатформенная среда для превращения веб-сайтов в приложения',
         project_version_label: 'Версия',
@@ -180,6 +187,13 @@ const translations = {
         useragent_string: 'User-Agent String',
         add: 'Add',
         general_settings: 'General Settings',
+        update_settings_title: 'Update Settings',
+        check_updates_on_startup: 'Check for updates when the manager starts',
+        check_updates_on_startup_desc: 'Check for a new version every time WebFlow Runtime Manager starts',
+        check_updates_on_startup_warning: 'When enabled, frequent manager restarts may cause update checks to be blocked for 24 hours. Enable this setting with care.',
+        enable: 'Enable',
+        updates_not_checked: 'Updates have not been checked',
+        updates_not_checked_desc: 'Start a manual check or enable checking when the manager starts',
         project_tab: 'About',
         project_branding_desc: 'A lightweight cross-platform environment for turning websites into applications',
         project_version_label: 'Version',
@@ -426,7 +440,6 @@ function loadProjectInfo() {
             console.error('Error loading project information:', error);
         }
     });
-    checkForUpdates(false);
 }
 
 function setUpdateStatus(status, description, canUpdate = false, action = 'check') {
@@ -1536,6 +1549,16 @@ async function loadEngineSettings() {
         const appFileLoggingElem = document.getElementById('setting-app-file-logging');
         if (appFileLoggingElem) appFileLoggingElem.checked = !!settings.app_log_to_file;
 
+        const checkUpdatesOnStartupElem = document.getElementById('setting-check-updates-on-startup');
+        if (checkUpdatesOnStartupElem) {
+            checkUpdatesOnStartupElem.checked = !!settings.check_updates_on_startup;
+            if (checkUpdatesOnStartupElem.checked) {
+                checkForUpdates(false);
+            } else {
+                setUpdateStatus(translations[currentLang].updates_not_checked, translations[currentLang].updates_not_checked_desc);
+            }
+        }
+
         document.getElementById('userdata-path').value = settings.current_userdata_path || '';
         document.getElementById('apps-path').textContent = settings.current_apps_path || '';
         document.getElementById('config-path').textContent = settings.current_config_path || '';
@@ -1592,6 +1615,22 @@ async function loadEngineSettings() {
             appFileLoggingElem.dataset.listener = 'true';
             appFileLoggingElem.addEventListener('change', saveGeneralSettings);
         }
+        if (checkUpdatesOnStartupElem && !checkUpdatesOnStartupElem.dataset.listener) {
+            checkUpdatesOnStartupElem.dataset.listener = 'true';
+            checkUpdatesOnStartupElem.addEventListener('change', async () => {
+                if (checkUpdatesOnStartupElem.checked) {
+                    const confirmed = await showConfirm(
+                        translations[currentLang].check_updates_on_startup_warning,
+                        translations[currentLang].enable
+                    );
+                    if (!confirmed) {
+                        checkUpdatesOnStartupElem.checked = false;
+                        return;
+                    }
+                }
+                saveGeneralSettings();
+            });
+        }
     } catch (error) {
         console.error('Error loading engine settings:', error);
     }
@@ -1610,6 +1649,7 @@ async function saveGeneralSettings() {
         const appMinimizeToTray = document.getElementById('setting-app-minimize-tray')?.checked || false;
         const managerFileLogging = document.getElementById('setting-manager-file-logging')?.checked ?? false;
         const appFileLogging = document.getElementById('setting-app-file-logging')?.checked ?? false;
+        const checkUpdatesOnStartup = document.getElementById('setting-check-updates-on-startup')?.checked ?? false;
         const managerLoggingChanged = managerFileLogging !== savedManagerFileLogging;
         defaultIsolatedStorage = isolatedStorage;
 
@@ -1621,7 +1661,8 @@ async function saveGeneralSettings() {
             start_minimized: startMinimized,
             isolated_storage: isolatedStorage,
             manager_log_to_file: managerFileLogging,
-            app_log_to_file: appFileLogging
+            app_log_to_file: appFileLogging,
+            check_updates_on_startup: checkUpdatesOnStartup
         };
 
         await new Promise((resolve) => {
