@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevented duplicate startup update notifications when manager settings are loaded more than once.
 - Updated all dynamic project and update status labels immediately when the interface language changes.
 - Preserved the “updates not checked” status when changing language with startup checks disabled.
+- Preserved the result of a completed update check when general settings are loaded again.
 
 ---
 

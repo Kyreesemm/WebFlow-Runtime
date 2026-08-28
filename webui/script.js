@@ -1586,12 +1586,16 @@ async function loadEngineSettings() {
                 startupUpdateCheckStarted = true;
                 checkForUpdates(false, true);
             } else if (!checkUpdatesOnStartupElem.checked) {
-                setUpdateStatus(
-                    translations[currentLang].updates_not_checked,
-                    translations[currentLang].updates_not_checked_desc,
-                    true,
-                    'check'
-                );
+                if (lastUpdateState) {
+                    refreshUpdateStatusLocalization();
+                } else {
+                    setUpdateStatus(
+                        translations[currentLang].updates_not_checked,
+                        translations[currentLang].updates_not_checked_desc,
+                        true,
+                        'check'
+                    );
+                }
             }
         }
 
