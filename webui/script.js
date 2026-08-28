@@ -4,6 +4,7 @@ let defaultIsolatedStorage = true;
 let managerIsGnome = false;
 let savedManagerFileLogging = false;
 let updateAvailable = false;
+let startupUpdateCheckStarted = false;
 
 // Переводы
 const translations = {
@@ -1552,9 +1553,10 @@ async function loadEngineSettings() {
         const checkUpdatesOnStartupElem = document.getElementById('setting-check-updates-on-startup');
         if (checkUpdatesOnStartupElem) {
             checkUpdatesOnStartupElem.checked = !!settings.check_updates_on_startup;
-            if (checkUpdatesOnStartupElem.checked) {
+            if (checkUpdatesOnStartupElem.checked && !startupUpdateCheckStarted) {
+                startupUpdateCheckStarted = true;
                 checkForUpdates(false, true);
-            } else {
+            } else if (!checkUpdatesOnStartupElem.checked) {
                 setUpdateStatus(
                     translations[currentLang].updates_not_checked,
                     translations[currentLang].updates_not_checked_desc,
