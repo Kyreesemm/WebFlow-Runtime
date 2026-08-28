@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed the manual update check button being disabled when startup update checks are turned off.
+- Showed a manager notification when an update is found during an enabled startup check.
+
 ---
 
 ## [v0.2.0-dev] - August 24th, 2026
