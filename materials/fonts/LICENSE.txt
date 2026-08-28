@@ -1,0 +1,7 @@
+Roboto and Material Symbols Rounded are provided under the Apache License 2.0.
+
+Copyright 2011 The Roboto Project Authors
+Copyright 2022 Google LLC
+
+The full license text is available at:
+https://www.apache.org/licenses/LICENSE-2.0

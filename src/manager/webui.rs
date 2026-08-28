@@ -6,6 +6,32 @@ use wry::http::{HeaderValue, Response};
 #[folder = "webui/"]
 pub struct WebUIAssets;
 
+fn material_asset(path: &str) -> Option<(&'static [u8], &'static str)> {
+    match path {
+        "materials/default/webflow_runtime_icon.png" => Some((
+            include_bytes!("../../materials/default/webflow_runtime_icon.png"),
+            "image/png",
+        )),
+        "materials/fonts/Roboto-Regular.ttf" => Some((
+            include_bytes!("../../materials/fonts/Roboto-Regular.ttf"),
+            "font/ttf",
+        )),
+        "materials/fonts/Roboto-Medium.ttf" => Some((
+            include_bytes!("../../materials/fonts/Roboto-Medium.ttf"),
+            "font/ttf",
+        )),
+        "materials/fonts/Roboto-Bold.ttf" => Some((
+            include_bytes!("../../materials/fonts/Roboto-Bold.ttf"),
+            "font/ttf",
+        )),
+        "materials/fonts/MaterialSymbolsRounded.ttf" => Some((
+            include_bytes!("../../materials/fonts/MaterialSymbolsRounded.ttf"),
+            "font/ttf",
+        )),
+        _ => None,
+    }
+}
+
 pub fn handle_custom_protocol_request(path: &str) -> Response<Cow<'static, [u8]>> {
     let clean_path = path
         .trim_start_matches('/')
@@ -18,13 +44,11 @@ pub fn handle_custom_protocol_request(path: &str) -> Response<Cow<'static, [u8]>
         clean_path.trim_start_matches('/')
     };
 
-    if file_path == "materials/default/webflow_runtime_icon.png" {
+    if let Some((data, mime)) = material_asset(file_path) {
         return Response::builder()
             .status(200)
-            .header("Content-Type", "image/png")
-            .body(Cow::Borrowed(&include_bytes!(
-                "../../materials/default/webflow_runtime_icon.png"
-            )[..]))
+            .header("Content-Type", mime)
+            .body(Cow::Borrowed(data))
             .unwrap();
     }
 
