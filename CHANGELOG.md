@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.2.1-dev] - August 28th, 2026
+
+### Added
+- Bundled Roboto and Material Symbols Rounded fonts for offline manager operation.
+- Added reliable embedded WebView serving for the bundled manager fonts.
+
 ### Fixed
 - Fixed the manual update check button being disabled when startup update checks are turned off.
 - Showed a manager notification when an update is found during an enabled startup check.
@@ -14,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated all dynamic project and update status labels immediately when the interface language changes.
 - Preserved the “updates not checked” status when changing language with startup checks disabled.
 - Preserved the result of a completed update check when general settings are loaded again.
-- Bundled Roboto and Material Symbols Rounded locally so the manager interface remains correctly sized and iconized offline.
-- Served the bundled manager fonts through the embedded WebView protocol.
-- Embedded the manager font files directly with the WebView assets so Material Symbols load reliably on all supported platforms.
 - Restored the local Material Symbols CSS rules so icon ligatures render as icons instead of text.
 
 ---
