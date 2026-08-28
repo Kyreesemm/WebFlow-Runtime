@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the manual update check button being disabled when startup update checks are turned off.
 - Showed a manager notification when an update is found during an enabled startup check.
 - Prevented duplicate startup update notifications when manager settings are loaded more than once.
+- Updated all dynamic project and update status labels immediately when the interface language changes.
+- Preserved the “updates not checked” status when changing language with startup checks disabled.
 
 ---
 

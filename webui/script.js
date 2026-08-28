@@ -5,6 +5,7 @@ let managerIsGnome = false;
 let savedManagerFileLogging = false;
 let updateAvailable = false;
 let startupUpdateCheckStarted = false;
+let lastUpdateState = null;
 
 // Переводы
 const translations = {
@@ -350,6 +351,7 @@ function applyTranslations() {
 
     populateCookieBrowserOptions();
     updateProjectComponentLabels();
+    refreshUpdateStatusLocalization();
 
     // Обновить tooltips для вкладок
     document.querySelectorAll('.tab-icon').forEach(tab => {
@@ -456,6 +458,28 @@ function setUpdateStatus(status, description, canUpdate = false, action = 'check
     }
 }
 
+function refreshUpdateStatusLocalization() {
+    if (lastUpdateState) {
+        applyUpdateState(lastUpdateState, false);
+        return;
+    }
+
+    const checkUpdatesOnStartupElem = document.getElementById('setting-check-updates-on-startup');
+    if (checkUpdatesOnStartupElem?.checked) {
+        setUpdateStatus(
+            translations[currentLang].updates_checking,
+            translations[currentLang].updates_checking_desc
+        );
+    } else {
+        setUpdateStatus(
+            translations[currentLang].updates_not_checked,
+            translations[currentLang].updates_not_checked_desc,
+            true,
+            'check'
+        );
+    }
+}
+
 function checkForUpdates(force = false, notify = false) {
     if (!managerAPI?.checkForUpdates) return;
     let notificationSent = false;
@@ -481,9 +505,13 @@ function checkForUpdates(force = false, notify = false) {
 
 function applyUpdateState(result, notify = false) {
     try {
-            const state = JSON.parse(result);
+            const state = typeof result === 'string' ? JSON.parse(result) : result;
+            lastUpdateState = state;
             const update = state.result || state;
-            if (state.status === 'checking') return;
+            if (state.status === 'checking') {
+                setUpdateStatus(translations[currentLang].updates_checking, translations[currentLang].updates_checking_desc);
+                return;
+            }
             if (update.status === 'update_available') {
                 updateAvailable = true;
                 setUpdateStatus(
@@ -621,6 +649,7 @@ function toggleLanguage() {
     document.body.setAttribute('data-lang', currentLang);
     localStorage.setItem('language', currentLang);
     applyTranslations();
+    loadProjectInfo();
     saveFullWindowState();
     loadApps(); // Перезагрузить приложения для обновления текста
 }
