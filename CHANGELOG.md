@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated the template picker to group templates by category and use compact cards.
+- AI templates now select the platform-specific Google Chrome User-Agent automatically.
 
 ---
 

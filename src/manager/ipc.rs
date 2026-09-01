@@ -821,7 +821,16 @@ pub fn create_template_app(template_id: &str) -> Result<String, String> {
     let app_id = format!("{}-{}", template_id, now);
 
     let (template, path) = load_template(template_id).ok_or_else(|| "Template not found".to_string())?;
-    let mut config: AppConfig = serde_json::from_value(template.get("app").cloned().ok_or_else(|| "Template has no app configuration".to_string())?)
+    let mut app_value = template.get("app").cloned().ok_or_else(|| "Template has no app configuration".to_string())?;
+    if app_value.get("user_agent").and_then(Value::as_str) == Some("platform-chrome") {
+        if let Some(object) = app_value.as_object_mut() {
+            object.insert(
+                "user_agent".into(),
+                Value::String(if cfg!(target_os = "windows") { "chrome-windows" } else { "chrome-linux" }.into()),
+            );
+        }
+    }
+    let mut config: AppConfig = serde_json::from_value(app_value)
         .map_err(|error| format!("Invalid template configuration: {error}"))?;
 
     Config::save_app_config(&app_id, &config)?;
