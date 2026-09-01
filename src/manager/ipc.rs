@@ -126,6 +126,7 @@ pub fn handle_ipc_message(
 
                 if let Ok(cfg) = config {
                     let _ = Config::save_app_config(app_id, &cfg);
+                    Config::sync_app_shortcut(app_id, &cfg);
                     send_response(&webview_handle, id, "true");
                     return;
                 }
@@ -155,6 +156,7 @@ pub fn handle_ipc_message(
                         }
                     }
                     let _ = Config::save_app_config(app_id, cfg);
+                    Config::sync_app_shortcut(app_id, cfg);
                     send_response(&webview_handle, id, "true");
                     return;
                 }
@@ -818,7 +820,13 @@ pub fn create_template_app(template_id: &str) -> Result<String, String> {
         .unwrap_or_default()
         .as_secs();
 
-    let app_id = format!("{}-{}", template_id, now);
+    let base_id = format!("{}-{}", template_id, now);
+    let mut app_id = base_id.clone();
+    let mut instance = 1;
+    while Config::get_apps_dir().join(&app_id).exists() {
+        app_id = format!("{}-{}", base_id, instance);
+        instance += 1;
+    }
 
     let (template, path) = load_template(template_id).ok_or_else(|| "Template not found".to_string())?;
     let mut app_value = template.get("app").cloned().ok_or_else(|| "Template has no app configuration".to_string())?;
@@ -832,6 +840,16 @@ pub fn create_template_app(template_id: &str) -> Result<String, String> {
     }
     let mut config: AppConfig = serde_json::from_value(app_value)
         .map_err(|error| format!("Invalid template configuration: {error}"))?;
+    let original_name = config.name.clone();
+    let mut name = original_name.clone();
+    let mut suffix = 1;
+    while Config::list_apps().iter().filter_map(|id| Config::load_app_config(id)).any(|app| app.name == name) {
+        name = format!("{} ({})", original_name, suffix);
+        suffix += 1;
+    }
+    config.name = name.clone();
+    config.window.title = name;
+    config.create_shortcut = true;
 
     Config::save_app_config(&app_id, &config)?;
     if let Some(icon) = template.get("icon").and_then(Value::as_str) {
@@ -844,6 +862,7 @@ pub fn create_template_app(template_id: &str) -> Result<String, String> {
             Config::save_app_config(&app_id, &config)?;
         }
     }
+    Config::sync_app_shortcut(&app_id, &config);
     Ok(app_id)
 }
 

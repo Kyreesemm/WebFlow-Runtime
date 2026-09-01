@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added optional application shortcuts with Linux desktop and Windows Start Menu/Desktop integration.
 - Added automatic manager shortcuts for Linux desktop applications and the Windows Start Menu.
 - Added categorized AI assistant templates for Claude, ChatGPT, Gemini, Grok, DeepSeek, and Qwen.
 - Added JSON-based template definitions with Russian and English names and descriptions.

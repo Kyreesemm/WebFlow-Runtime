@@ -24,6 +24,7 @@ const translations = {
         allow_resize: 'Разрешить изменение размера',
         custom_scrollbar: 'Кастомный скроллбар',
         isolated_storage: 'Изолированное хранилище',
+        create_shortcut: 'Создавать ярлык приложения',
         custom_css: 'Кастомный CSS (опционально)',
         custom_js: 'Кастомный JavaScript (опционально)',
         save: 'Сохранить',
@@ -177,6 +178,7 @@ const translations = {
         allow_resize: 'Allow Resizing',
         custom_scrollbar: 'Custom Scrollbar',
         isolated_storage: 'Isolated Storage',
+        create_shortcut: 'Create an application shortcut',
         custom_css: 'Custom CSS (optional)',
         custom_js: 'Custom JavaScript (optional)',
         save: 'Save',
@@ -1046,6 +1048,7 @@ function editApp(appId) {
         document.getElementById('window-resizable').checked = config.window.resizable;
         document.getElementById('custom-scrollbar').checked = config.custom_scrollbar;
         document.getElementById('isolated-storage').checked = config.isolated_storage;
+        document.getElementById('create-shortcut').checked = config.create_shortcut === true;
         populateBuiltInUserAgents(config.user_agent);
         document.getElementById('custom-css').value = config.custom_css || '';
         document.getElementById('custom-js').value = config.custom_js || '';
@@ -1196,6 +1199,7 @@ document.getElementById('app-form').addEventListener('submit', function(e) {
             custom_user_agent: null,
             custom_scrollbar: document.getElementById('custom-scrollbar').checked,
             isolated_storage: document.getElementById('isolated-storage').checked,
+            create_shortcut: document.getElementById('create-shortcut').checked,
             custom_css: document.getElementById('custom-css').value,
             custom_js: document.getElementById('custom-js').value,
             imported_cookies: window.currentImportedCookies || []

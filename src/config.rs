@@ -55,6 +55,8 @@ pub struct AppConfig {
     pub custom_js: Option<String>,
     #[serde(default)]
     pub imported_cookies: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub create_shortcut: bool,
 }
 
 fn default_user_agent() -> String {
@@ -75,6 +77,7 @@ impl Default for AppConfig {
             custom_css: None,
             custom_js: None,
             imported_cookies: Vec::new(),
+            create_shortcut: false,
         }
     }
 }
@@ -281,6 +284,7 @@ impl Config {
     }
 
     pub fn delete_app(app_id: &str) -> Result<(), String> {
+        Self::remove_app_shortcuts(app_id);
         let app_dir = Self::get_apps_dir().join(app_id);
         if app_dir.exists() {
             fs::remove_dir_all(app_dir).map_err(|e| e.to_string())?;
@@ -291,6 +295,104 @@ impl Config {
         }
         Ok(())
     }
+
+    pub fn sync_app_shortcut(app_id: &str, config: &AppConfig) {
+        if config.create_shortcut {
+            Self::create_app_shortcuts(app_id, config);
+        } else {
+            Self::remove_app_shortcuts(app_id);
+        }
+    }
+
+    fn shortcut_id(app_id: &str) -> String {
+        app_id.chars().map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' { ch } else { '-' }
+        }).collect()
+    }
+
+    #[cfg(target_os = "linux")]
+    fn create_app_shortcuts(app_id: &str, config: &AppConfig) {
+        let Some(data_home) = std::env::var_os("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))) else { return };
+        let Ok(executable) = std::env::current_exe() else { return };
+        let Some(base_dir) = executable.parent() else { return };
+        let applications = data_home.join("applications");
+        let path = applications.join(format!("webflow-runtime-app-{}.desktop", Self::shortcut_id(app_id)));
+        let icon = Self::get_app_icon_path(app_id);
+        let quote = |value: &str| format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""));
+        let content = format!(
+            "[Desktop Entry]\nType=Application\nName={}\nExec={} --app {}\nIcon={}\nTerminal=false\nCategories=Utility;\nPath={}\n",
+            config.name.replace(['\n', '\r'], " "), quote(&executable.to_string_lossy()), quote(app_id), icon.to_string_lossy(), base_dir.to_string_lossy()
+        );
+        if fs::read_to_string(&path).ok().as_deref() == Some(content.as_str()) { return; }
+        let _ = fs::create_dir_all(&applications);
+        let _ = fs::write(path, content);
+    }
+
+    #[cfg(target_os = "windows")]
+    fn create_app_shortcuts(app_id: &str, config: &AppConfig) {
+        let Ok(executable) = std::env::current_exe() else { return };
+        let Some(app_data) = std::env::var_os("APPDATA") else { return };
+        let Some(user_profile) = std::env::var_os("USERPROFILE") else { return };
+        let Some(base_dir) = executable.parent() else { return };
+        let icon = Self::get_app_icon_path(app_id);
+        let shortcut_name = format!("WebFlow Runtime - {}.lnk", Self::shortcut_id(app_id));
+        let paths = [
+            PathBuf::from(app_data).join("Microsoft/Windows/Start Menu/Programs").join(&shortcut_name),
+            PathBuf::from(user_profile).join("Desktop").join(&shortcut_name),
+        ];
+        let script = r#"
+$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($env:WEBFLOW_APP_SHORTCUT_PATH)
+$icon = $env:WEBFLOW_APP_SHORTCUT_ICON + ',0'
+if ($shortcut.TargetPath -ne $env:WEBFLOW_APP_SHORTCUT_TARGET -or $shortcut.Arguments -ne $env:WEBFLOW_APP_SHORTCUT_ARGS -or $shortcut.WorkingDirectory -ne $env:WEBFLOW_APP_SHORTCUT_WORKDIR -or $shortcut.IconLocation -ne $icon -or $shortcut.Description -ne $env:WEBFLOW_APP_SHORTCUT_NAME) {
+    $shortcut.TargetPath = $env:WEBFLOW_APP_SHORTCUT_TARGET
+    $shortcut.Arguments = $env:WEBFLOW_APP_SHORTCUT_ARGS
+    $shortcut.WorkingDirectory = $env:WEBFLOW_APP_SHORTCUT_WORKDIR
+    $shortcut.IconLocation = $icon
+    $shortcut.Description = $env:WEBFLOW_APP_SHORTCUT_NAME
+    $shortcut.Save()
+}
+"#;
+        for path in paths {
+            if let Some(parent) = path.parent() { let _ = fs::create_dir_all(parent); }
+            let _ = std::process::Command::new("powershell.exe")
+                .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script])
+                .env("WEBFLOW_APP_SHORTCUT_PATH", &path)
+                .env("WEBFLOW_APP_SHORTCUT_TARGET", &executable)
+                .env("WEBFLOW_APP_SHORTCUT_ARGS", format!("--app {}", app_id))
+                .env("WEBFLOW_APP_SHORTCUT_WORKDIR", base_dir)
+                .env("WEBFLOW_APP_SHORTCUT_ICON", &icon)
+                .env("WEBFLOW_APP_SHORTCUT_NAME", &config.name)
+                .status();
+        }
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    fn create_app_shortcuts(_app_id: &str, _config: &AppConfig) {}
+
+    #[cfg(target_os = "linux")]
+    fn remove_app_shortcuts(app_id: &str) {
+        if let Some(data_home) = std::env::var_os("XDG_DATA_HOME").map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))) {
+            let path = data_home.join("applications").join(format!("webflow-runtime-app-{}.desktop", Self::shortcut_id(app_id)));
+            let _ = fs::remove_file(path);
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn remove_app_shortcuts(app_id: &str) {
+        let name = format!("WebFlow Runtime - {}.lnk", Self::shortcut_id(app_id));
+        if let Some(app_data) = std::env::var_os("APPDATA") {
+            let _ = fs::remove_file(PathBuf::from(app_data).join("Microsoft/Windows/Start Menu/Programs").join(&name));
+        }
+        if let Some(user_profile) = std::env::var_os("USERPROFILE") {
+            let _ = fs::remove_file(PathBuf::from(user_profile).join("Desktop").join(&name));
+        }
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    fn remove_app_shortcuts(_app_id: &str) {}
 
     pub fn load_engine_settings() -> EngineSettings {
         let path = Self::get_config_dir().join("engine_settings.json");
