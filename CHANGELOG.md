@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.2.2-dev] - 2026-09-01
+
 ### Added
 - Added optional application shortcuts with Linux desktop and Windows Start Menu/Desktop integration.
 - Added automatic manager shortcuts for Linux desktop applications and the Windows Start Menu.
