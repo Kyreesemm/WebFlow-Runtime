@@ -875,6 +875,7 @@ function showConfirm(message, acceptLabel = null) {
     const modal = document.getElementById('confirm-modal');
     document.getElementById('confirm-message').textContent = message;
     document.getElementById('confirm-accept-btn').textContent = acceptLabel || translations[currentLang].ok;
+    modal.classList.remove('closing');
     modal.classList.add('active');
 
     return new Promise(resolve => {
@@ -882,9 +883,20 @@ function showConfirm(message, acceptLabel = null) {
     });
 }
 
+function closeModalWithAnimation(modal, onClosed = null) {
+    if (!modal || !modal.classList.contains('active')) return;
+
+    modal.classList.add('closing');
+    setTimeout(() => {
+        if (!modal.classList.contains('closing')) return;
+        modal.classList.remove('active', 'closing');
+        if (onClosed) onClosed();
+    }, 300);
+}
+
 function closeConfirmModal(accepted) {
     const modal = document.getElementById('confirm-modal');
-    modal.classList.remove('active', 'closing');
+    closeModalWithAnimation(modal);
 
     if (confirmResolver) {
         const resolver = confirmResolver;
@@ -897,12 +909,13 @@ function showUserdataChangeModal() {
     const modal = document.getElementById('userdata-change-modal');
     document.getElementById('userdata-transfer').checked = true;
     document.getElementById('userdata-delete-old').checked = false;
+    modal.classList.remove('closing');
     modal.classList.add('active');
     return new Promise(resolve => { userdataChangeResolver = resolve; });
 }
 
 function closeUserdataChangeModal(accepted) {
-    document.getElementById('userdata-change-modal').classList.remove('active', 'closing');
+    closeModalWithAnimation(document.getElementById('userdata-change-modal'));
     if (userdataChangeResolver) {
         const resolver = userdataChangeResolver;
         userdataChangeResolver = null;
@@ -1077,13 +1090,14 @@ function showCreateModal() {
     document.getElementById('icon-preview').style.display = 'none';
     window.currentImportedCookies = [];
     updateFileInputLabel();
+    document.getElementById('modal').classList.remove('closing');
     document.getElementById('modal').classList.add('active');
 }
 
 // Закрыть модальное окно
 function closeModal() {
     const modal = document.getElementById('modal');
-    modal.classList.remove('active', 'closing');
+    closeModalWithAnimation(modal);
 }
 
 // Показать модальное окно шаблонов
@@ -1137,16 +1151,15 @@ function showTemplatesModal() {
             </section>
         `).join('');
 
-        document.getElementById('templates-modal').classList.add('active');
+        const modal = document.getElementById('templates-modal');
+        modal.classList.remove('closing');
+        modal.classList.add('active');
     });
 }
 
 function closeTemplatesModal() {
     const modal = document.getElementById('templates-modal');
-    modal.classList.add('closing');
-    setTimeout(() => {
-        modal.classList.remove('active', 'closing');
-    }, 300);
+    closeModalWithAnimation(modal);
 }
 
 function createFromTemplate(templateId) {
@@ -1244,15 +1257,14 @@ function loadUserAgents() {
 
 function showAddUAModal() {
     document.getElementById('ua-form').reset();
-    document.getElementById('ua-modal').classList.add('active');
+    const modal = document.getElementById('ua-modal');
+    modal.classList.remove('closing');
+    modal.classList.add('active');
 }
 
 function closeUAModal() {
     const modal = document.getElementById('ua-modal');
-    modal.classList.add('closing');
-    setTimeout(() => {
-        modal.classList.remove('active', 'closing');
-    }, 300);
+    closeModalWithAnimation(modal);
 }
 
 document.getElementById('ua-form').addEventListener('submit', function(e) {
@@ -1287,7 +1299,7 @@ document.querySelectorAll('.modal').forEach(modal => {
             } else if (this.id === 'confirm-modal') {
                 closeConfirmModal(false);
             } else {
-                this.classList.remove('active');
+                closeModalWithAnimation(this);
             }
         }
     });
@@ -1298,12 +1310,14 @@ let currentAppId = null;
 
 function openAppSettings(appId) {
     currentAppId = appId;
-    document.getElementById('app-settings-modal').classList.add('active');
+    const modal = document.getElementById('app-settings-modal');
+    modal.classList.remove('closing');
+    modal.classList.add('active');
 }
 
 function closeAppSettingsModal() {
     const modal = document.getElementById('app-settings-modal');
-    modal.classList.remove('active', 'closing');
+    closeModalWithAnimation(modal);
     currentAppId = null;
 }
 
@@ -1326,15 +1340,14 @@ function deleteAppFromSettings() {
 function showImportCookiesModal() {
     if (!currentAppId) return;
     closeAppSettingsModal();
-    document.getElementById('import-cookies-modal').classList.add('active');
+    const modal = document.getElementById('import-cookies-modal');
+    modal.classList.remove('closing');
+    modal.classList.add('active');
 }
 
 function closeImportCookiesModal() {
     const modal = document.getElementById('import-cookies-modal');
-    modal.classList.add('closing');
-    setTimeout(() => {
-        modal.classList.remove('active', 'closing');
-    }, 300);
+    closeModalWithAnimation(modal);
 }
 
 function loadAvailableCookieBrowsers() {
