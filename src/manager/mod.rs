@@ -53,6 +53,70 @@ fn prepare_manager_desktop_entry(icon_path: &std::path::Path) {
 }
 
 #[cfg(target_os = "linux")]
+fn ensure_manager_shortcut() {
+    use std::path::PathBuf;
+
+    let Some(data_home) = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))) else {
+        return;
+    };
+    let Ok(executable) = std::env::current_exe() else { return };
+    let base_dir = executable.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let icon_path = base_dir.join("materials/default/webflow_runtime_icon.png");
+    let shortcut_path = data_home.join("applications/webflow-runtime.desktop");
+    let quote = |value: &str| format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""));
+    let content = format!(
+        "[Desktop Entry]\nType=Application\nName=WebFlow Runtime Manager\nExec={}\nIcon={}\nTerminal=false\nCategories=Utility;\nPath={}\n",
+        quote(&executable.to_string_lossy()),
+        icon_path.to_string_lossy(),
+        base_dir.to_string_lossy()
+    );
+
+    if fs::read_to_string(&shortcut_path).ok().as_deref() == Some(content.as_str()) {
+        return;
+    }
+    if let Some(parent) = shortcut_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = fs::write(shortcut_path, content);
+}
+
+#[cfg(target_os = "windows")]
+fn ensure_manager_shortcut() {
+    let Ok(executable) = std::env::current_exe() else { return };
+    let Some(app_data) = std::env::var_os("APPDATA") else { return };
+    let base_dir = executable.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let icon_path = base_dir.join("materials\\default\\webflow_runtime_icon.ico");
+    let shortcut_path = std::path::PathBuf::from(app_data)
+        .join("Microsoft/Windows/Start Menu/Programs/WebFlow Runtime Manager.lnk");
+    let script = r#"
+$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($env:WEBFLOW_SHORTCUT_PATH)
+$icon = $env:WEBFLOW_SHORTCUT_ICON + ',0'
+if ($shortcut.TargetPath -ne $env:WEBFLOW_SHORTCUT_TARGET -or $shortcut.WorkingDirectory -ne $env:WEBFLOW_SHORTCUT_WORKDIR -or $shortcut.IconLocation -ne $icon) {
+    $shortcut.TargetPath = $env:WEBFLOW_SHORTCUT_TARGET
+    $shortcut.WorkingDirectory = $env:WEBFLOW_SHORTCUT_WORKDIR
+    $shortcut.IconLocation = $icon
+    $shortcut.Description = 'WebFlow Runtime Manager'
+    $shortcut.Save()
+}
+"#;
+    if let Some(parent) = shortcut_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = std::process::Command::new("powershell.exe")
+        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script])
+        .env("WEBFLOW_SHORTCUT_PATH", &shortcut_path)
+        .env("WEBFLOW_SHORTCUT_TARGET", &executable)
+        .env("WEBFLOW_SHORTCUT_WORKDIR", base_dir)
+        .env("WEBFLOW_SHORTCUT_ICON", &icon_path)
+        .status();
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn ensure_manager_shortcut() {}
+
+#[cfg(target_os = "linux")]
 fn configure_manager_window_backend() {
     let is_wayland_session = std::env::var("XDG_SESSION_TYPE")
         .map(|value| value.eq_ignore_ascii_case("wayland"))
@@ -142,6 +206,8 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
 
     #[cfg(target_os = "linux")]
     prepare_manager_desktop_entry(&icon_path);
+
+    ensure_manager_shortcut();
 
     #[cfg(target_os = "linux")]
     configure_manager_window_backend();
