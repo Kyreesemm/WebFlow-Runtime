@@ -1,0 +1,9 @@
+{
+  "id": "claude",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Claude", "en": "Claude" },
+  "description": { "ru": "Умный помощник от Anthropic для общения, анализа и работы с текстом.", "en": "Anthropic's assistant for conversation, analysis, and writing." },
+  "url": "https://claude.ai",
+  "icon": "../../materials/templates-icons/ais/claude-icon.png",
+  "app": { "name": "Claude", "url": "https://claude.ai", "icon": "icon.png", "window": { "title": "Claude", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

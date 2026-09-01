@@ -1,0 +1,9 @@
+{
+  "id": "qwen",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Qwen", "en": "Qwen" },
+  "description": { "ru": "Многоязычный AI-помощник Alibaba для текста, кода и анализа.", "en": "Alibaba's multilingual assistant for text, code, and analysis." },
+  "url": "https://chat.qwen.ai",
+  "icon": "../../materials/templates-icons/ais/qwen-icon.png",
+  "app": { "name": "Qwen", "url": "https://chat.qwen.ai", "icon": "icon.png", "window": { "title": "Qwen", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

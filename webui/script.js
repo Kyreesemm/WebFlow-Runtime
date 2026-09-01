@@ -32,6 +32,7 @@ const translations = {
         custom: 'Свой',
         custom_useragent: 'Свой User-Agent',
         select_template: 'Выбрать шаблон',
+        template_category: 'Шаблоны',
         add_useragent: 'Добавить User-Agent',
         name: 'Название',
         useragent_string: 'User-Agent строка',
@@ -184,6 +185,7 @@ const translations = {
         custom: 'Custom',
         custom_useragent: 'Custom User-Agent',
         select_template: 'Select Template',
+        template_category: 'Templates',
         add_useragent: 'Add User-Agent',
         name: 'Name',
         useragent_string: 'User-Agent String',
@@ -1092,7 +1094,19 @@ function showTemplatesModal() {
         const templates = JSON.parse(templatesJson);
         const container = document.getElementById('templates-list');
 
-        container.innerHTML = templates.map(template => {
+        const grouped = templates.reduce((groups, template) => {
+            const category = typeof template.category === 'object'
+                ? (template.category[currentLang] || template.category.en || template.category.ru)
+                : (template.category || translations[currentLang].template_category);
+            (groups[category] ||= []).push(template);
+            return groups;
+        }, {});
+
+        container.innerHTML = Object.entries(grouped).map(([category, categoryTemplates]) => `
+            <section class="template-category">
+                <h3>${category}</h3>
+                <div class="template-grid">
+                    ${categoryTemplates.map(template => {
             // Поддержка как старого формата (строка), так и нового (объект с переводами)
             const name = typeof template.name === 'object'
                 ? (template.name[currentLang] || template.name.en || template.name.ru)
@@ -1103,12 +1117,12 @@ function showTemplatesModal() {
                 : template.description;
 
             // Иконка шаблона
-            const iconHtml = template.icon
-                ? `<img src="file://${template.iconPath}" alt="${name}">`
+            const iconHtml = template.icon_data
+                ? `<img src="${template.icon_data}" alt="${name}">`
                 : `<span>${name.charAt(0).toUpperCase()}</span>`;
 
             return `
-                <div class="app-card" onclick="createFromTemplate('${template.id}')">
+                <div class="app-card template-card" onclick="createFromTemplate('${template.id}')">
                     <div class="app-card-header">
                         <div class="app-icon">${iconHtml}</div>
                         <div class="app-info">
@@ -1118,7 +1132,10 @@ function showTemplatesModal() {
                     </div>
                 </div>
             `;
-        }).join('');
+                    }).join('')}
+                </div>
+            </section>
+        `).join('');
 
         document.getElementById('templates-modal').classList.add('active');
     });

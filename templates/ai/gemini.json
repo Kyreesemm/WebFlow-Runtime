@@ -1,0 +1,9 @@
+{
+  "id": "gemini",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Gemini", "en": "Gemini" },
+  "description": { "ru": "AI-помощник Google с поиском, анализом и мультимодальными возможностями.", "en": "Google's AI assistant with search, analysis, and multimodal features." },
+  "url": "https://gemini.google.com",
+  "icon": "../../materials/templates-icons/ais/gemini-icon.png",
+  "app": { "name": "Gemini", "url": "https://gemini.google.com", "icon": "icon.png", "window": { "title": "Gemini", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

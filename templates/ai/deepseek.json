@@ -1,0 +1,9 @@
+{
+  "id": "deepseek",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "DeepSeek", "en": "DeepSeek" },
+  "description": { "ru": "AI-чат для рассуждений, поиска решений и программирования.", "en": "An AI chat for reasoning, problem-solving, and coding." },
+  "url": "https://chat.deepseek.com",
+  "icon": "../../materials/templates-icons/ais/deepseek-icon.png",
+  "app": { "name": "DeepSeek", "url": "https://chat.deepseek.com", "icon": "icon.png", "window": { "title": "DeepSeek", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

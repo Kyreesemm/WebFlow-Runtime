@@ -205,13 +205,13 @@ pub fn handle_ipc_message(
             send_response(&webview_handle, id, &json_str);
         }
         "listTemplates" => {
-            let templates = list_templates_internal();
+            let templates = list_templates();
             let json_str = serde_json::to_string(&templates).unwrap_or_else(|_| "[]".into());
             send_response(&webview_handle, id, &json_str);
         }
         "createFromTemplate" => {
             if let Some(template_id) = args.get(0).and_then(|v| v.as_str()) {
-                if let Ok(app_id) = create_from_template_internal(template_id) {
+                if let Ok(app_id) = create_template_app(template_id) {
                     send_response(&webview_handle, id, &serde_json::to_string(&app_id).unwrap_or_default());
                     return;
                 }
@@ -754,72 +754,65 @@ fn clear_webview_cookies(storage: &Path) -> bool {
     success
 }
 
-#[derive(Serialize)]
-struct TemplateInfo {
-    id: String,
-    name: String,
-    description: String,
-    url: String,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TemplateInfo {
+    pub id: String,
+    pub category: Value,
+    pub name: Value,
+    pub description: Value,
+    pub url: String,
+    pub icon_data: Option<String>,
 }
 
-fn list_templates_internal() -> Vec<TemplateInfo> {
-    let mut list = Vec::new();
-
-    list.push(TemplateInfo {
-        id: "claude".into(),
-        name: "Claude AI".into(),
-        description: "Anthropic Claude Assistant".into(),
-        url: "https://claude.ai".into(),
-    });
-    list.push(TemplateInfo {
-        id: "chatgpt".into(),
-        name: "ChatGPT".into(),
-        description: "OpenAI ChatGPT".into(),
-        url: "https://chatgpt.com".into(),
-    });
-    list.push(TemplateInfo {
-        id: "deepseek".into(),
-        name: "DeepSeek".into(),
-        description: "DeepSeek AI Chat".into(),
-        url: "https://chat.deepseek.com".into(),
-    });
-    list.push(TemplateInfo {
-        id: "youtube".into(),
-        name: "YouTube".into(),
-        description: "YouTube Video Streaming".into(),
-        url: "https://youtube.com".into(),
-    });
-
-    let tmpl_dir = Config::get_base_dir().join("templates");
-    if tmpl_dir.exists() {
-        if let Ok(entries) = fs::read_dir(tmpl_dir) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_dir() && p.join("config.json").exists() {
-                    if let Ok(content) = fs::read_to_string(p.join("config.json")) {
-                        if let Ok(cfg) = serde_json::from_str::<Value>(&content) {
-                            let name = cfg.get("name").and_then(|v| v.as_str()).unwrap_or("Template").to_string();
-                            let desc = cfg.get("description").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                            let url = cfg.get("url").and_then(|v| v.as_str()).unwrap_or("https://example.com").to_string();
-                            if let Some(id) = p.file_name().and_then(|s| s.to_str()) {
-                                list.push(TemplateInfo {
-                                    id: id.to_string(),
-                                    name,
-                                    description: desc,
-                                    url,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
+fn template_files(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    let Ok(entries) = fs::read_dir(dir) else { return files };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            files.extend(template_files(&path));
+        } else if path.extension().and_then(|value| value.to_str()) == Some("json") {
+            files.push(path);
         }
     }
+    files
+}
 
+fn load_template(template_id: &str) -> Option<(Value, PathBuf)> {
+    template_files(&Config::get_base_dir().join("templates"))
+        .into_iter()
+        .find_map(|path| {
+            let value = serde_json::from_str::<Value>(&fs::read_to_string(&path).ok()?).ok()?;
+            (value.get("id").and_then(Value::as_str) == Some(template_id)).then_some((value, path))
+        })
+}
+
+pub fn list_templates() -> Vec<TemplateInfo> {
+    let mut list = template_files(&Config::get_base_dir().join("templates"))
+        .into_iter()
+        .filter_map(|path| {
+            let value = serde_json::from_str::<Value>(&fs::read_to_string(&path).ok()?).ok()?;
+            let id = value.get("id")?.as_str()?.to_string();
+            let icon_data = value.get("icon").and_then(Value::as_str).and_then(|icon| {
+                let icon_path = path.parent()?.join(icon);
+                let bytes = fs::read(icon_path).ok()?;
+                Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
+            });
+            Some(TemplateInfo {
+                id,
+                category: value.get("category").cloned().unwrap_or_else(|| serde_json::json!({})),
+                name: value.get("name").cloned().unwrap_or_else(|| Value::String("Template".into())),
+                description: value.get("description").cloned().unwrap_or_else(|| Value::String(String::new())),
+                url: value.get("url").and_then(Value::as_str).unwrap_or("https://example.com").into(),
+                icon_data,
+            })
+        })
+        .collect::<Vec<_>>();
+    list.sort_by(|left, right| left.id.cmp(&right.id));
     list
 }
 
-fn create_from_template_internal(template_id: &str) -> Result<String, String> {
+pub fn create_template_app(template_id: &str) -> Result<String, String> {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -827,20 +820,21 @@ fn create_from_template_internal(template_id: &str) -> Result<String, String> {
 
     let app_id = format!("{}-{}", template_id, now);
 
-    let (name, url) = match template_id {
-        "claude" => ("Claude AI", "https://claude.ai"),
-        "chatgpt" => ("ChatGPT", "https://chatgpt.com"),
-        "deepseek" => ("DeepSeek", "https://chat.deepseek.com"),
-        "youtube" => ("YouTube", "https://youtube.com"),
-        _ => ("New App", "https://example.com"),
-    };
-
-    let mut config = AppConfig::default();
-    config.name = name.to_string();
-    config.url = url.to_string();
-    config.window.title = name.to_string();
+    let (template, path) = load_template(template_id).ok_or_else(|| "Template not found".to_string())?;
+    let mut config: AppConfig = serde_json::from_value(template.get("app").cloned().ok_or_else(|| "Template has no app configuration".to_string())?)
+        .map_err(|error| format!("Invalid template configuration: {error}"))?;
 
     Config::save_app_config(&app_id, &config)?;
+    if let Some(icon) = template.get("icon").and_then(Value::as_str) {
+        let icon_path = path.parent().map(|parent| parent.join(icon));
+        if let Some(icon_path) = icon_path {
+            let destination = Config::get_apps_dir().join(&app_id).join("icon.png");
+            if let Some(parent) = destination.parent() { let _ = fs::create_dir_all(parent); }
+            let _ = fs::copy(icon_path, destination);
+            config.icon = Some("icon.png".into());
+            Config::save_app_config(&app_id, &config)?;
+        }
+    }
     Ok(app_id)
 }
 

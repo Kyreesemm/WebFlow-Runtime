@@ -2266,3 +2266,54 @@ body.theme-transitioning * {
         grid-template-columns: 1fr;
     }
 }
+
+.template-category + .template-category {
+    margin-top: 24px;
+}
+
+.template-category > h3 {
+    margin: 0 0 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.template-card {
+    padding: 12px;
+    gap: 0;
+}
+
+.template-card .app-card-header {
+    grid-column: 1 / -1;
+    gap: 11px;
+}
+
+.template-card .app-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 10px;
+    font-size: 20px;
+}
+
+.template-card .app-info h3 {
+    margin-bottom: 3px;
+}
+
+.template-card .app-info p {
+    font-size: 12px;
+    line-height: 1.35;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}

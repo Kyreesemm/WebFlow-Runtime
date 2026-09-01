@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added categorized AI assistant templates for Claude, ChatGPT, Gemini, Grok, DeepSeek, and Qwen.
+- Added JSON-based template definitions with Russian and English names and descriptions.
+- Added template icon support and bundled template assets for portable builds.
+
+### Changed
+- Updated the template picker to group templates by category and use compact cards.
+
 ---
 
 ## [v0.2.1-dev] - August 28th, 2026

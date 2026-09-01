@@ -22,6 +22,7 @@ fn copy_directory(source: &Path, destination: &Path) -> std::io::Result<()> {
 
 fn main() {
     println!("cargo:rerun-if-changed=materials");
+    println!("cargo:rerun-if-changed=templates");
     println!("cargo:rerun-if-changed=webflow-runtime.rc");
 
     if env::var("TARGET")
@@ -46,5 +47,12 @@ fn main() {
     let destination = profile_dir.join("materials");
     if let Err(error) = copy_directory(&source, &destination) {
         println!("cargo:warning=Failed to copy materials: {error}");
+    }
+
+    let templates = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("templates");
+    if templates.exists() {
+        if let Err(error) = copy_directory(&templates, &profile_dir.join("templates")) {
+            println!("cargo:warning=Failed to copy templates: {error}");
+        }
     }
 }

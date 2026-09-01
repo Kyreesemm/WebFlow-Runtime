@@ -1,0 +1,9 @@
+{
+  "id": "chatgpt",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "ChatGPT", "en": "ChatGPT" },
+  "description": { "ru": "Универсальный AI-помощник от OpenAI для идей, кода и повседневных задач.", "en": "OpenAI's assistant for ideas, code, and everyday tasks." },
+  "url": "https://chatgpt.com",
+  "icon": "../../materials/templates-icons/ais/chatgpt-icon.png",
+  "app": { "name": "ChatGPT", "url": "https://chatgpt.com", "icon": "icon.png", "window": { "title": "ChatGPT", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

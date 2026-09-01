@@ -1,0 +1,9 @@
+{
+  "id": "grok",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Grok", "en": "Grok" },
+  "description": { "ru": "Разговорный AI-помощник от xAI с актуальным контекстом из X.", "en": "xAI's conversational assistant with current context from X." },
+  "url": "https://grok.com",
+  "icon": "../../materials/templates-icons/ais/grok-icon.png",
+  "app": { "name": "Grok", "url": "https://grok.com", "icon": "icon.png", "window": { "title": "Grok", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}
