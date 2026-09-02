@@ -1,0 +1,9 @@
+{
+  "id": "microsoft-copilot",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Microsoft Copilot", "en": "Microsoft Copilot" },
+  "description": { "ru": "AI-помощник Microsoft для поиска, общения, создания контента и решения задач.", "en": "Microsoft's AI assistant for search, conversation, content creation, and everyday tasks." },
+  "url": "https://copilot.microsoft.com",
+  "icon": "../../materials/templates-icons/ais/microsoft-copilot-icon.png",
+  "app": { "name": "Microsoft Copilot", "url": "https://copilot.microsoft.com", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "Microsoft Copilot", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

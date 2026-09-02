@@ -1,0 +1,9 @@
+{
+  "id": "perplexity",
+  "category": { "ru": "Нейросети и ИИ", "en": "AI assistants" },
+  "name": { "ru": "Perplexity", "en": "Perplexity" },
+  "description": { "ru": "AI-поисковик для ответов с источниками, исследований и анализа информации.", "en": "An AI search engine for sourced answers, research, and information analysis." },
+  "url": "https://www.perplexity.ai",
+  "icon": "../../materials/templates-icons/ais/perplexity-icon.png",
+  "app": { "name": "Perplexity", "url": "https://www.perplexity.ai", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "Perplexity", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

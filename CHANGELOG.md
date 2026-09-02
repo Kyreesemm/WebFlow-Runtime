@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added Perplexity and Microsoft Copilot AI assistant templates.
+
 ---
 
-## [v0.2.2-dev] - 2026-09-01
+## [v0.2.2-dev] - September 1st, 2026
 
 ### Added
 - Added optional application shortcuts with Linux desktop and Windows Start Menu/Desktop integration.
