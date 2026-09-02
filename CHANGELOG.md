@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.2.3-dev] - September 2nd, 2026
+
 ### Added
 - Added Perplexity and Microsoft Copilot AI assistant templates.
 - Added automated unit tests for configuration, CLI parsing, template loading, IPC helpers, WebUI assets, icons, storage cleanup, and update archives.
-
----
 
 ## [v0.2.2-dev] - September 1st, 2026
 
