@@ -75,3 +75,34 @@ pub fn handle_custom_protocol_request(path: &str) -> Response<Cow<'static, [u8]>
             .unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::handle_custom_protocol_request;
+    use wry::http::StatusCode;
+
+    #[test]
+    fn serves_index_for_supported_root_urls() {
+        for path in ["/", "webflow://manager/", "http://webflow.localhost/"] {
+            let response = handle_custom_protocol_request(path);
+            assert_eq!(response.status(), StatusCode::OK);
+            assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some("text/html"));
+            assert!(!response.body().is_empty());
+        }
+    }
+
+    #[test]
+    fn serves_bundled_fonts_with_correct_mime_type() {
+        let response = handle_custom_protocol_request("materials/fonts/Roboto-Regular.ttf");
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some("font/ttf"));
+        assert!(!response.body().is_empty());
+    }
+
+    #[test]
+    fn returns_not_found_for_unknown_assets() {
+        let response = handle_custom_protocol_request("missing-asset.txt");
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(response.body().as_ref(), b"404 Not Found");
+    }
+}

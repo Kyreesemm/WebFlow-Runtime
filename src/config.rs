@@ -17,6 +17,72 @@ pub struct WindowConfig {
     pub custom_frame: bool,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{AppConfig, Config, EngineSettings, WindowConfig};
+
+    #[test]
+    fn defaults_match_runtime_expectations() {
+        let window = WindowConfig::default();
+        assert_eq!(window.title, "New Application");
+        assert_eq!((window.width, window.height), (1024, 768));
+        assert!(window.resizable);
+        assert!(!window.custom_frame);
+
+        let app = AppConfig::default();
+        assert_eq!(app.name, "New App");
+        assert_eq!(app.url, "https://example.com");
+        assert_eq!(app.user_agent, "default");
+        assert!(app.isolated_storage);
+        assert!(app.imported_cookies.is_empty());
+
+        let settings = EngineSettings::default();
+        assert!(settings.isolated_storage);
+        assert!(!settings.autostart);
+        assert!(!settings.check_updates_on_startup);
+    }
+
+    #[test]
+    fn missing_fields_use_serde_defaults() {
+        let app: AppConfig = serde_json::from_str(r#"{"name":"Test","url":"https://example.com"}"#)
+            .expect("minimal app config should deserialize");
+        assert_eq!(app.window.width, 1024);
+        assert!(app.window.resizable);
+        assert_eq!(app.user_agent, "default");
+        assert!(app.isolated_storage);
+
+        let settings: EngineSettings = serde_json::from_str("{}").expect("empty settings should deserialize");
+        assert!(settings.isolated_storage);
+        assert_eq!(settings.userdata_path, None);
+    }
+
+    #[test]
+    fn app_config_round_trips_without_losing_fields() {
+        let mut config = AppConfig::default();
+        config.name = "Configured app".into();
+        config.icon = Some("icon.png".into());
+        config.custom_user_agent = Some("Custom/1.0".into());
+        config.custom_css = Some("body { color: red; }".into());
+        config.imported_cookies = vec![serde_json::json!({"name": "session", "value": "abc"})];
+        config.create_shortcut = true;
+
+        let encoded = serde_json::to_string(&config).expect("config should serialize");
+        let decoded: AppConfig = serde_json::from_str(&encoded).expect("config should deserialize");
+        assert_eq!(decoded.name, config.name);
+        assert_eq!(decoded.icon, config.icon);
+        assert_eq!(decoded.custom_user_agent, config.custom_user_agent);
+        assert_eq!(decoded.imported_cookies, config.imported_cookies);
+        assert!(decoded.create_shortcut);
+    }
+
+    #[test]
+    fn shortcut_ids_replace_unsafe_characters() {
+        assert_eq!(Config::shortcut_id("my app/one"), "my-app-one");
+        assert_eq!(Config::shortcut_id("valid_123-name"), "valid_123-name");
+        assert_eq!(Config::shortcut_id(""), "");
+    }
+}
+
 impl Default for WindowConfig {
     fn default() -> Self {
         Self {
@@ -353,6 +419,7 @@ if ($shortcut.TargetPath -ne $env:WEBFLOW_APP_SHORTCUT_TARGET -or $shortcut.Argu
     $shortcut.Description = $env:WEBFLOW_APP_SHORTCUT_NAME
     $shortcut.Save()
 }
+
 "#;
         for path in paths {
             if let Some(parent) = path.parent() { let _ = fs::create_dir_all(parent); }

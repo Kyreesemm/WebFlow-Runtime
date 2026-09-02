@@ -182,3 +182,25 @@ pub const DEBUG_INJECTED_JS: &str = r#"
     }
 })();
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::{DEBUG_INJECTED_JS, INJECTED_BRIDGE_JS};
+
+    #[test]
+    fn bridge_exposes_all_manager_api_groups() {
+        for method in ["listApps", "createApp", "listTemplates", "createFromTemplate", "getEngineSettings", "checkForUpdates", "clearAllData"] {
+            assert!(INJECTED_BRIDGE_JS.contains(&format!("'{method}'")));
+        }
+        assert!(INJECTED_BRIDGE_JS.contains("window.managerAPI = managerAPIObj"));
+        assert!(INJECTED_BRIDGE_JS.contains("window.__WEBFLOW_IPC_CALLBACK__"));
+    }
+
+    #[test]
+    fn debug_bridge_captures_ui_and_ipc_events() {
+        assert!(DEBUG_INJECTED_JS.contains("ui.click"));
+        assert!(DEBUG_INJECTED_JS.contains("ui.change"));
+        assert!(DEBUG_INJECTED_JS.contains("ipc.request"));
+        assert!(DEBUG_INJECTED_JS.contains("js.unhandledrejection"));
+    }
+}

@@ -404,3 +404,118 @@ fn copy_update_files(source: &Path, destination: &Path) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{asset_name, copy_update_files, extract_archive, find_archive_root, parse_release_version};
+    use flate2::write::GzEncoder;
+    use flate2::Compression;
+    use std::fs;
+    use std::io::Write;
+    use tempfile::tempdir;
+    use zip::write::SimpleFileOptions;
+
+    #[test]
+    fn parses_release_versions_with_optional_v_prefix() {
+        assert_eq!(parse_release_version("v1.2.3").expect("version").to_string(), "1.2.3");
+        assert_eq!(parse_release_version(" 1.2.3 "), None);
+        assert_eq!(parse_release_version("release-1.2.3"), None);
+        assert!(parse_release_version("v1.2.3-beta.1").expect("version").pre.as_str() == "beta.1");
+    }
+
+    #[test]
+    fn builds_platform_asset_name() {
+        let name = asset_name("v1.2.3");
+        assert!(name.starts_with("WebFlow-Runtime-v1.2.3-Portable-"));
+        assert!(name.ends_with("-x86-64.tar.gz") || name.ends_with("-x86-64.zip"));
+    }
+
+    #[test]
+    fn extracts_tar_gz_archive_and_detects_single_root() {
+        let dir = tempdir().expect("temporary directory");
+        let archive_path = dir.path().join("update.tar.gz");
+        let file = fs::File::create(&archive_path).expect("archive file");
+        let encoder = GzEncoder::new(file, Compression::default());
+        let mut archive = tar::Builder::new(encoder);
+        let release_dir = dir.path().join("release");
+        fs::create_dir(&release_dir).expect("release directory");
+        let content = b"runtime";
+        fs::write(release_dir.join("webflow-runtime"), content).expect("runtime source");
+        archive.append_dir_all("release", &release_dir).expect("append directory");
+        archive.into_inner().expect("finish tar").finish().expect("finish gzip");
+
+        let destination = dir.path().join("staging");
+        fs::create_dir(&destination).expect("staging directory");
+        extract_archive(&archive_path, &destination).expect("archive should extract");
+        let root = find_archive_root(&destination).expect("root should be found");
+        assert_eq!(fs::read(root.join("webflow-runtime")).expect("runtime file"), content);
+    }
+
+    #[test]
+    fn extracts_zip_archive() {
+        let dir = tempdir().expect("temporary directory");
+        let archive_path = dir.path().join("update.zip");
+        let file = fs::File::create(&archive_path).expect("archive file");
+        let mut archive = zip::ZipWriter::new(file);
+        archive.start_file("release/materials/icon.png", SimpleFileOptions::default()).expect("zip entry");
+        archive.write_all(b"icon").expect("zip content");
+        archive.finish().expect("finish zip");
+
+        let destination = dir.path().join("staging");
+        fs::create_dir(&destination).expect("staging directory");
+        extract_archive(&archive_path, &destination).expect("archive should extract");
+        assert_eq!(fs::read(destination.join("release/materials/icon.png")).expect("icon file"), b"icon");
+    }
+
+    #[test]
+    fn rejects_unsafe_archive_paths() {
+        let dir = tempdir().expect("temporary directory");
+        let archive_path = dir.path().join("unsafe.zip");
+        let file = fs::File::create(&archive_path).expect("archive file");
+        let mut archive = zip::ZipWriter::new(file);
+        archive.start_file("../outside", SimpleFileOptions::default()).expect("unsafe zip entry");
+        archive.write_all(b"unsafe").expect("zip content");
+        archive.finish().expect("finish zip");
+
+        let result = extract_archive(&archive_path, &dir.path().join("staging"));
+        assert!(result.expect_err("unsafe path should fail").contains("unsafe path"));
+    }
+
+    #[test]
+    fn copies_files_but_preserves_userdata() {
+        let dir = tempdir().expect("temporary directory");
+        let source = dir.path().join("source");
+        let destination = dir.path().join("destination");
+        fs::create_dir_all(source.join("userdata")).expect("source directories");
+        fs::create_dir_all(&destination).expect("destination directory");
+        fs::create_dir(destination.join("userdata")).expect("existing user data directory");
+        fs::write(source.join("webflow-runtime"), b"new runtime").expect("runtime file");
+        fs::write(source.join("userdata/settings.json"), b"keep old data").expect("user data");
+        fs::write(destination.join("webflow-runtime"), b"old runtime").expect("old runtime");
+        fs::write(destination.join("userdata/settings.json"), b"existing data").expect("existing data");
+
+        copy_update_files(&source, &destination).expect("copy should succeed");
+        assert_eq!(fs::read(destination.join("webflow-runtime")).expect("runtime"), b"new runtime");
+        assert_eq!(fs::read(destination.join("userdata/settings.json")).expect("data"), b"existing data");
+    }
+
+    #[test]
+    fn rejects_incomplete_update_metadata_before_network_access() {
+        let mut progress_calls = 0;
+        let check = super::UpdateCheck {
+            status: "up_to_date".into(),
+            current_version: "0.2.2".into(),
+            latest_version: None,
+            release_url: None,
+            asset_name: None,
+            asset_url: None,
+            asset_size: None,
+            asset_digest: None,
+            error: None,
+        };
+        let error = super::download_and_start_update(check, |_, _, _| progress_calls += 1)
+            .expect_err("non-update result should be rejected");
+        assert_eq!(error, "No verified update is available");
+        assert_eq!(progress_calls, 0);
+    }
+}

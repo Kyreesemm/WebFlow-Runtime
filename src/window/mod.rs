@@ -154,6 +154,33 @@ pub fn build_webview(builder: WebViewBuilder<'_>, window: &Window) -> Result<Web
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{load_window_icon_bytes, WindowFrameStyle, WindowOptions, APP_MIN_HEIGHT, APP_MIN_WIDTH};
+
+    #[test]
+    fn window_options_have_safe_defaults() {
+        let options = WindowOptions::default();
+        assert_eq!(options.title, "WebFlow Application");
+        assert_eq!((options.width, options.height), (1024, 768));
+        assert_eq!(options.frame_style, WindowFrameStyle::System);
+        assert_eq!((options.min_width, options.min_height), (APP_MIN_WIDTH, APP_MIN_HEIGHT));
+        assert_eq!(options.position, None);
+    }
+
+    #[test]
+    fn icon_loader_rejects_invalid_bytes() {
+        assert!(load_window_icon_bytes(b"not a png").is_none());
+        assert!(load_window_icon_bytes(&[]).is_none());
+    }
+
+    #[test]
+    fn icon_loader_accepts_bundled_icon() {
+        let bytes = include_bytes!("../../materials/default/app_icon.png");
+        assert!(load_window_icon_bytes(bytes).is_some());
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn configure_webkit_settings(vbox: &gtk::Box) {
     use gtk::prelude::*;

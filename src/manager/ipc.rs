@@ -901,3 +901,95 @@ fn delete_user_agent_internal(ua_id: &str) {
     let path = Config::get_config_dir().join("user_agents.json");
     let _ = fs::write(path, serde_json::to_string_pretty(&uas).unwrap_or_default());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{format_size, is_background_command, is_cache_directory, is_cookie_file, is_inside_cache, list_templates, normalized_file_name, storage_size, clear_webview_cache, clear_webview_cookies, IpcPayload};
+    use serde_json::json;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn formats_storage_sizes_at_unit_boundaries() {
+        assert_eq!(format_size(0), "0 B");
+        assert_eq!(format_size(999), "999 B");
+        assert_eq!(format_size(1_000), "1.0 KB");
+        assert_eq!(format_size(1_000_000), "1.0 MB");
+        assert_eq!(format_size(1_000_000_000), "1.00 GB");
+    }
+
+    #[test]
+    fn recognizes_cache_and_cookie_names_case_insensitively() {
+        assert_eq!(normalized_file_name(std::path::Path::new("/tmp/CACHE")), Some("cache".into()));
+        assert!(is_cache_directory(std::path::Path::new("/tmp/WebKitCache")));
+        assert!(is_cache_directory(std::path::Path::new("/tmp/Code Cache")));
+        assert!(is_cookie_file(std::path::Path::new("/tmp/Cookies")));
+        assert!(is_cookie_file(std::path::Path::new("/tmp/cookies-journal")));
+        assert!(is_cookie_file(std::path::Path::new("/tmp/cookies.sqlite")));
+        assert!(!is_cookie_file(std::path::Path::new("/tmp/my-cookies")));
+    }
+
+    #[test]
+    fn identifies_cache_paths_only_inside_storage() {
+        let storage = std::path::Path::new("/tmp/storage");
+        assert!(is_inside_cache(storage, &storage.join("nested/Cache/file")));
+        assert!(!is_inside_cache(storage, &storage.join("data/file")));
+        assert!(!is_inside_cache(storage, std::path::Path::new("/tmp/other/Cache/file")));
+    }
+
+    #[test]
+    fn measures_cache_and_data_without_double_counting_hard_links() {
+        let dir = tempdir().expect("temporary directory");
+        fs::create_dir(dir.path().join("Cache")).expect("cache directory");
+        fs::write(dir.path().join("Cache/blob"), vec![b'x'; 10]).expect("cache file");
+        fs::write(dir.path().join("database"), vec![b'x'; 7]).expect("data file");
+        let sizes = storage_size(dir.path());
+        assert_eq!(sizes.cache, 10);
+        assert_eq!(sizes.data, 7);
+    }
+
+    #[test]
+    fn clears_cache_but_keeps_regular_data() {
+        let dir = tempdir().expect("temporary directory");
+        fs::create_dir(dir.path().join("cache")).expect("cache directory");
+        fs::write(dir.path().join("cache/blob"), b"cache").expect("cache file");
+        fs::write(dir.path().join("database"), b"data").expect("data file");
+        assert!(clear_webview_cache(dir.path()));
+        assert!(!dir.path().join("cache").exists());
+        assert!(dir.path().join("database").exists());
+    }
+
+    #[test]
+    fn clears_cookie_files_but_keeps_other_files() {
+        let dir = tempdir().expect("temporary directory");
+        fs::write(dir.path().join("Cookies"), b"cookies").expect("cookie file");
+        fs::write(dir.path().join("database"), b"data").expect("data file");
+        assert!(clear_webview_cookies(dir.path()));
+        assert!(!dir.path().join("Cookies").exists());
+        assert!(dir.path().join("database").exists());
+    }
+
+    #[test]
+    fn background_commands_are_filtered_from_normal_tracing() {
+        assert!(is_background_command("getRunningApps"));
+        assert!(is_background_command("getTotalCacheSize"));
+        assert!(!is_background_command("listApps"));
+    }
+
+    #[test]
+    fn parses_ipc_payload_with_optional_arguments() {
+        let payload: IpcPayload = serde_json::from_value(json!({"id": 7, "cmd": "listApps"}))
+            .expect("payload without args should deserialize");
+        assert_eq!(payload.id, 7);
+        assert_eq!(payload.cmd, "listApps");
+        assert!(payload.args.is_empty());
+    }
+
+    #[test]
+    fn lists_all_bundled_templates_with_icons() {
+        let templates = list_templates();
+        let ids: Vec<_> = templates.iter().map(|template| template.id.as_str()).collect();
+        assert_eq!(ids, vec!["chatgpt", "claude", "deepseek", "gemini", "grok", "microsoft-copilot", "perplexity", "qwen"]);
+        assert!(templates.iter().all(|template| template.icon_data.as_deref().is_some_and(|icon| icon.starts_with("data:image/png;base64,"))));
+    }
+}

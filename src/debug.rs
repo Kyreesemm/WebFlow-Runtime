@@ -133,3 +133,30 @@ fn civil_date(days_since_epoch: i64) -> (i64, i64, i64) {
     let month = month_part + if month_part < 10 { 3 } else { -9 };
     (year + if month <= 2 { 1 } else { 0 }, month, day)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{civil_date, preview};
+
+    #[test]
+    fn preview_keeps_short_values_unchanged() {
+        assert_eq!(preview("hello"), "hello");
+        assert_eq!(preview("Привет"), "Привет");
+    }
+
+    #[test]
+    fn preview_limits_characters_and_reports_bytes() {
+        let value = "аб".repeat(1_001);
+        let result = preview(&value);
+        let expected_preview: String = value.chars().take(2000).collect();
+        assert!(result.starts_with(&expected_preview));
+        assert!(result.ends_with(&format!("... ({} bytes total)", value.len())));
+    }
+
+    #[test]
+    fn civil_date_handles_epoch_and_leap_years() {
+        assert_eq!(civil_date(0), (1970, 1, 1));
+        assert_eq!(civil_date(18_262), (2020, 1, 1));
+        assert_eq!(civil_date(18_322), (2020, 3, 1));
+    }
+}
