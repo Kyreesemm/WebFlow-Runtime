@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Minor edit of the Gemini name in neural network templates
+
 ---
 
 ## [v0.2.3-dev] - September 2nd, 2026
