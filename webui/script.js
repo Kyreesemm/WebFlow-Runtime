@@ -23,6 +23,7 @@ const translations = {
         window_height: 'Высота окна (px)',
         allow_resize: 'Разрешить изменение размера',
         custom_scrollbar: 'Кастомный скроллбар',
+        hardware_acceleration: 'Аппаратное ускорение',
         isolated_storage: 'Изолированное хранилище',
         create_shortcut: 'Создавать ярлык приложения',
         custom_css: 'Кастомный CSS (опционально)',
@@ -177,6 +178,7 @@ const translations = {
         window_height: 'Window Height (px)',
         allow_resize: 'Allow Resizing',
         custom_scrollbar: 'Custom Scrollbar',
+        hardware_acceleration: 'Hardware acceleration',
         isolated_storage: 'Isolated Storage',
         create_shortcut: 'Create an application shortcut',
         custom_css: 'Custom CSS (optional)',
@@ -1047,6 +1049,7 @@ function editApp(appId) {
         document.getElementById('window-height').value = config.window.height;
         document.getElementById('window-resizable').checked = config.window.resizable;
         document.getElementById('custom-scrollbar').checked = config.custom_scrollbar;
+        document.getElementById('hardware-acceleration').checked = config.hardware_acceleration === true;
         document.getElementById('isolated-storage').checked = config.isolated_storage;
         document.getElementById('create-shortcut').checked = config.create_shortcut === true;
         populateBuiltInUserAgents(config.user_agent);
@@ -1090,6 +1093,7 @@ function showCreateModal() {
     document.getElementById('app-form').reset();
     document.getElementById('app-id').value = '';
     document.getElementById('isolated-storage').checked = defaultIsolatedStorage;
+    document.getElementById('hardware-acceleration').checked = false;
     document.getElementById('icon-preview').style.display = 'none';
     window.currentImportedCookies = [];
     updateFileInputLabel();
@@ -1198,6 +1202,7 @@ document.getElementById('app-form').addEventListener('submit', function(e) {
             user_agent: document.getElementById('user-agent').value,
             custom_user_agent: null,
             custom_scrollbar: document.getElementById('custom-scrollbar').checked,
+            hardware_acceleration: document.getElementById('hardware-acceleration').checked,
             isolated_storage: document.getElementById('isolated-storage').checked,
             create_shortcut: document.getElementById('create-shortcut').checked,
             custom_css: document.getElementById('custom-css').value,

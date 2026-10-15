@@ -306,7 +306,7 @@ pub fn run_app(app_id: String, debug: bool) -> Result<(), String> {
     // Delay the first navigation until WebKitGTK settings have been applied.
     builder = builder.with_url("about:blank");
 
-    let webview = build_webview(builder, &window)?;
+    let webview = build_webview(builder, &window, config.hardware_acceleration)?;
     apply_window_icon(&window, &icon_path, options.icon.clone());
     webview.load_url(&config.url).map_err(|e| e.to_string())?;
     Config::mark_app_running(&app_id, std::process::id());

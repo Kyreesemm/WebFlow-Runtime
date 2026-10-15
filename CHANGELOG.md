@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added an optional per-application hardware acceleration setting for Linux and Windows.
+
 ### Changed
 - Minor edit of the Gemini name in neural network templates
 

@@ -113,6 +113,8 @@ pub struct AppConfig {
     pub custom_user_agent: Option<String>,
     #[serde(default)]
     pub custom_scrollbar: bool,
+    #[serde(default)]
+    pub hardware_acceleration: bool,
     #[serde(default = "default_true")]
     pub isolated_storage: bool,
     #[serde(default)]
@@ -139,6 +141,7 @@ impl Default for AppConfig {
             user_agent: "default".to_string(),
             custom_user_agent: None,
             custom_scrollbar: false,
+            hardware_acceleration: false,
             isolated_storage: true,
             custom_css: None,
             custom_js: None,

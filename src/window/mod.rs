@@ -135,7 +135,7 @@ impl WindowFactory {
     }
 }
 
-pub fn build_webview(builder: WebViewBuilder<'_>, window: &Window) -> Result<WebView, String> {
+pub fn build_webview(builder: WebViewBuilder<'_>, window: &Window, hardware_acceleration: bool) -> Result<WebView, String> {
     #[cfg(target_os = "linux")]
     {
         use tao::platform::unix::WindowExtUnix;
@@ -144,12 +144,20 @@ pub fn build_webview(builder: WebViewBuilder<'_>, window: &Window) -> Result<Web
             .default_vbox()
             .ok_or_else(|| "Failed to get GTK container vbox from window".to_string())?;
         let webview = builder.build_gtk(vbox).map_err(|e| e.to_string())?;
-        configure_webkit_settings(&vbox);
+        configure_webkit_settings(&vbox, hardware_acceleration);
         Ok(webview)
     }
 
     #[cfg(not(target_os = "linux"))]
     {
+        #[cfg(target_os = "windows")]
+        let builder = if hardware_acceleration {
+            use wry::WebViewBuilderExtWindows;
+            builder.with_additional_browser_args("--ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy")
+        } else {
+            builder
+        };
+        let _ = hardware_acceleration;
         builder.build(window).map_err(|e| e.to_string())
     }
 }
@@ -182,7 +190,7 @@ mod tests {
 }
 
 #[cfg(target_os = "linux")]
-fn configure_webkit_settings(vbox: &gtk::Box) {
+fn configure_webkit_settings(vbox: &gtk::Box, hardware_acceleration: bool) {
     use gtk::prelude::*;
     use webkit2gtk::{SettingsExt, WebViewExt};
 
@@ -196,10 +204,12 @@ fn configure_webkit_settings(vbox: &gtk::Box) {
                 settings.set_enable_webaudio(true);
                 settings.set_enable_webgl(true);
 
-                // Keep video rendering on the software path. This avoids the
-                // WebKitGTK GPU crash seen when YouTube starts playback.
                 settings.set_hardware_acceleration_policy(
-                    webkit2gtk::HardwareAccelerationPolicy::Never,
+                    if hardware_acceleration {
+                        webkit2gtk::HardwareAccelerationPolicy::Always
+                    } else {
+                        webkit2gtk::HardwareAccelerationPolicy::Never
+                    },
                 );
             }
 

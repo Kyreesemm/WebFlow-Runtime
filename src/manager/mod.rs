@@ -417,7 +417,7 @@ fn create_webview(
         builder = builder.with_devtools(true);
     }
 
-    let webview = build_webview(builder, window)?;
+    let webview = build_webview(builder, window, false)?;
     *webview_handle.lock().unwrap() = Some(webview);
     if debug {
         ipc::debug_print("32", "WEBVIEW", "manager WebView created".to_string());
