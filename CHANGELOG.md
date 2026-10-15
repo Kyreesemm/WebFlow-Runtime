@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Minor edit of the Gemini name in neural network templates
 
+### Fixed
+- Fixed window size number input controls overflowing their borders and styled the increment and decrement buttons to match the WebFlow interface.
+
 ---
 
 ## [v0.2.3-dev] - September 2nd, 2026

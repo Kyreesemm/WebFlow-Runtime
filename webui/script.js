@@ -798,6 +798,22 @@ document.addEventListener('DOMContentLoaded', function() {
 // Показать/скрыть поле кастомного User-Agent
 document.getElementById('cookie-browser')?.addEventListener('change', updateCookieProfileOptions);
 
+document.querySelectorAll('.number-btn[data-number-input]').forEach(button => {
+    button.addEventListener('click', () => {
+        const input = document.getElementById(button.dataset.numberInput);
+        if (!input) return;
+
+        if (button.dataset.numberAction === 'increment') {
+            input.stepUp();
+        } else {
+            input.stepDown();
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.focus();
+    });
+});
+
 function updateFileInputLabel() {
     const input = document.getElementById('app-icon');
     if (!input) return;

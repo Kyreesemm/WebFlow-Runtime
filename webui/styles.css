@@ -697,73 +697,68 @@ body.theme-transitioning * {
     transition: border-color 0.2s;
 }
 
-/* Custom Number Input Arrows */
 .form-group input[type="number"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     -moz-appearance: textfield;
     appearance: textfield;
-    padding-right: 8px;
+    padding-right: 44px;
 }
 
 .form-group input[type="number"]::-webkit-inner-spin-button,
 .form-group input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
-    width: 20px;
-    height: 100%;
-    position: absolute;
-    right: 0;
-    top: 0;
-    cursor: pointer;
-    background: var(--bg-hover);
-    border-left: 1px solid var(--border);
 }
 
-.form-group {
+.number-input-wrap {
     position: relative;
-}
-
-.form-group input[type="number"] {
-    padding-right: 32px;
+    width: 100%;
+    min-width: 0;
 }
 
 .number-controls {
     position: absolute;
+    top: 1px;
     right: 1px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 1px;
+    width: 34px;
     display: flex;
     flex-direction: column;
-    height: calc(100% - 2px);
-    width: 28px;
-    border-radius: 0 6px 6px 0;
     overflow: hidden;
+    border-left: 1px solid var(--border);
+    border-radius: 0 5px 5px 0;
 }
 
 .number-btn {
-    flex: 1;
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 0;
+    border: 0;
     background: var(--bg-hover);
-    border: none;
-    border-left: 1px solid var(--border);
-    color: var(--accent-orange);
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
-    font-size: 16px;
+    transition: background 0.18s ease, color 0.18s ease;
 }
 
-.number-btn:hover {
+.number-btn + .number-btn {
+    border-top: 1px solid var(--border);
+}
+
+.number-btn:hover,
+.number-btn:focus-visible {
     background: var(--accent-orange);
-    color: white;
-}
-
-.number-btn:first-child {
-    border-bottom: 0.5px solid var(--border);
+    color: #fff;
+    outline: none;
 }
 
 .number-btn .material-symbols-rounded {
-    font-size: 16px;
+    font-size: 18px;
+    line-height: 1;
 }
 
 .form-group select {

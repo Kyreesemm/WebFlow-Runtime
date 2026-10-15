@@ -471,12 +471,24 @@
 
                 <div class="form-group">
                     <label data-i18n="window_width">Ширина окна (px)</label>
-                    <input type="number" id="window-width" value="1024" min="200" max="7680" step="1">
+                    <div class="number-input-wrap">
+                        <input type="number" id="window-width" value="1024" min="200" max="7680" step="1">
+                        <div class="number-controls" aria-label="Window width controls">
+                            <button type="button" class="number-btn" data-number-input="window-width" data-number-action="increment" aria-label="Increase width"><span class="material-symbols-rounded">keyboard_arrow_up</span></button>
+                            <button type="button" class="number-btn" data-number-input="window-width" data-number-action="decrement" aria-label="Decrease width"><span class="material-symbols-rounded">keyboard_arrow_down</span></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label data-i18n="window_height">Высота окна (px)</label>
-                    <input type="number" id="window-height" value="768" min="200" max="4320" step="1">
+                    <div class="number-input-wrap">
+                        <input type="number" id="window-height" value="768" min="200" max="4320" step="1">
+                        <div class="number-controls" aria-label="Window height controls">
+                            <button type="button" class="number-btn" data-number-input="window-height" data-number-action="increment" aria-label="Increase height"><span class="material-symbols-rounded">keyboard_arrow_up</span></button>
+                            <button type="button" class="number-btn" data-number-input="window-height" data-number-action="decrement" aria-label="Decrease height"><span class="material-symbols-rounded">keyboard_arrow_down</span></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="toggle-group">
