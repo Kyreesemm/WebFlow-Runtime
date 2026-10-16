@@ -1,0 +1,9 @@
+{
+  "id": "rutube",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "Rutube", "en": "Rutube" },
+  "description": { "ru": "Российская платформа с видео и прямыми эфирами.", "en": "A Russian video platform with on-demand content and live streams." },
+  "url": "https://rutube.ru",
+  "icon": "../../materials/templates-icons/videos/rutube-icon.png",
+  "app": { "name": "Rutube", "url": "https://rutube.ru", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "Rutube", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

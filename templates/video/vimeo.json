@@ -1,0 +1,9 @@
+{
+  "id": "vimeo",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "Vimeo", "en": "Vimeo" },
+  "description": { "ru": "Платформа для авторских и профессиональных видео.", "en": "A platform for creative and professional video." },
+  "url": "https://vimeo.com",
+  "icon": "../../materials/templates-icons/videos/vimeo-icon.png",
+  "app": { "name": "Vimeo", "url": "https://vimeo.com", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "Vimeo", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

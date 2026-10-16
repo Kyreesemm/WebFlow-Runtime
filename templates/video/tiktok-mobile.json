@@ -1,0 +1,9 @@
+{
+  "id": "tiktok-mobile",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "TikTok Mobile", "en": "TikTok Mobile" },
+  "description": { "ru": "Мобильная веб-версия TikTok с интерфейсом для смартфонов.", "en": "TikTok's mobile web experience with a phone-sized interface." },
+  "url": "https://www.tiktok.com",
+  "icon": "../../materials/templates-icons/videos/tiktok-icon.png",
+  "app": { "name": "TikTok Mobile", "url": "https://www.tiktok.com", "icon": "icon.png", "user_agent": "android", "window": { "title": "TikTok Mobile", "width": 430, "height": 900, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

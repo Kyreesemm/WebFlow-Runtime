@@ -1,0 +1,9 @@
+{
+  "id": "vk-video",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "VK Видео", "en": "VK Video" },
+  "description": { "ru": "Видео, клипы и трансляции на платформе VK.", "en": "Videos, clips, and live streams on VK." },
+  "url": "https://vkvideo.ru",
+  "icon": "../../materials/templates-icons/videos/vk-video-icon.png",
+  "app": { "name": "VK Видео", "url": "https://vkvideo.ru", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "VK Видео", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

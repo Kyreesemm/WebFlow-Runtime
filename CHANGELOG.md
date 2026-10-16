@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an optional per-application hardware acceleration setting for Linux and Windows.
 - Added a separate restart action after an update has downloaded and been verified.
 - Added the `--update` CLI command to check, download, verify, and install compatible updates.
+- Added seven video and streaming service templates, including separate TikTok web and mobile layouts.
 
 ### Changed
 - Minor edit of the Gemini name in neural network templates
+- Updated TikTok Mobile to use the built-in Android User-Agent profile.
 - Disabled text selection across the Manager interface while keeping text fields editable and selectable.
 
 ### Fixed

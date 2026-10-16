@@ -1,0 +1,9 @@
+{
+  "id": "tiktok-web",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "TikTok Web", "en": "TikTok Web" },
+  "description": { "ru": "Короткие видео в стандартной веб-версии TikTok.", "en": "Short videos in the standard TikTok web experience." },
+  "url": "https://www.tiktok.com",
+  "icon": "../../materials/templates-icons/videos/tiktok-icon.png",
+  "app": { "name": "TikTok Web", "url": "https://www.tiktok.com", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "TikTok Web", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}

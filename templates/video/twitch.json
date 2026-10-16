@@ -1,0 +1,9 @@
+{
+  "id": "twitch",
+  "category": { "ru": "Видео и стриминг", "en": "Video and streaming" },
+  "name": { "ru": "Twitch", "en": "Twitch" },
+  "description": { "ru": "Прямые трансляции игр, общения и других событий.", "en": "Live streams for gaming, chatting, and more." },
+  "url": "https://www.twitch.tv",
+  "icon": "../../materials/templates-icons/videos/twitch-icon.png",
+  "app": { "name": "Twitch", "url": "https://www.twitch.tv", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "Twitch", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
+}
