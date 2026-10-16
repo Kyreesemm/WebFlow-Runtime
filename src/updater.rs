@@ -325,6 +325,35 @@ where
     Ok(archive_path)
 }
 
+pub fn update_from_cli() -> Result<bool, String> {
+    println!("Checking for updates...");
+    let check = check_for_updates(true);
+    match check.status.as_str() {
+        "up_to_date" => {
+            println!("WebFlow Runtime {} is up to date.", check.current_version);
+            Ok(false)
+        }
+        "update_available" => {
+            let version = check.latest_version.as_deref().unwrap_or("the latest version");
+            println!("Update to {version} is available.");
+            let archive = download_update(check, |phase, percent, _| {
+                if phase == "downloading" || phase == "verified" {
+                    eprint!("\rDownloading and verifying update: {percent}%   ");
+                    let _ = io::stderr().flush();
+                }
+            })?;
+            eprintln!("\nUpdate verified. Installing...");
+            let pid = std::process::id().to_string();
+            std::env::current_exe().map_err(|error| error.to_string())
+                .and_then(|exe| Command::new(exe).arg("--update-helper").arg(archive)
+                    .arg("--update-parent-pid").arg(pid).spawn().map_err(|error| error.to_string()))
+                .map_err(|error| format!("Failed to start update installer: {error}"))?;
+            Ok(true)
+        }
+        _ => Err(check.error.unwrap_or_else(|| "Update check failed".into())),
+    }
+}
+
 pub fn run_update_helper(archive: &str, parent_pid: Option<u32>) -> Result<(), String> {
     if let Some(pid) = parent_pid {
         for _ in 0..100 {

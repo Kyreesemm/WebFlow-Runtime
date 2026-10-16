@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added an optional per-application hardware acceleration setting for Linux and Windows.
 - Added a separate restart action after an update has downloaded and been verified.
+- Added the `--update` CLI command to check, download, verify, and install compatible updates.
 
 ### Changed
 - Minor edit of the Gemini name in neural network templates

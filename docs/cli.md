@@ -99,6 +99,8 @@ The process exits with a non-zero status when the selected operation fails.
 
 ## Automatic updates
 
+Run `webflow-runtime --update` to check for the latest compatible release and install it from the command line. The command reports download and verification progress. When an update is ready, the current process exits and the installer replaces the runtime files, preserves `userdata/`, and launches the updated Manager. It exits successfully without changing files when the installed version is current.
+
 Manager mode checks the public GitHub Releases endpoint for a compatible update in the background. No GitHub token or API key is required.
 
 - A pre-release build accepts newer pre-release and stable releases.

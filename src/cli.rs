@@ -47,6 +47,10 @@ pub struct CliArgs {
     /// List all available application templates
     #[arg(long)]
     pub list_templates: bool,
+
+    /// Check for and install the latest compatible release
+    #[arg(long)]
+    pub update: bool,
 }
 
 #[cfg(test)]
@@ -62,6 +66,7 @@ mod tests {
         assert!(!args.debug_verbose);
         assert!(!args.debug_file);
         assert!(!args.list_templates);
+        assert!(!args.update);
     }
 
     #[test]
@@ -81,6 +86,13 @@ mod tests {
         ]).expect("update helper arguments should parse");
         assert_eq!(args.update_helper.as_deref(), Some("update.zip"));
         assert_eq!(args.update_parent_pid, Some(42));
+    }
+
+    #[test]
+    fn parses_update_command() {
+        let args = CliArgs::try_parse_from(["webflow-runtime", "--update"])
+            .expect("update argument should parse");
+        assert!(args.update);
     }
 
     #[test]

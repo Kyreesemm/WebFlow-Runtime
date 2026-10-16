@@ -48,6 +48,17 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(300));
     }
 
+    if args.update {
+        match updater::update_from_cli() {
+            Ok(true) => return,
+            Ok(false) => std::process::exit(0),
+            Err(error) => {
+                eprintln!("Update failed: {error}");
+                std::process::exit(1);
+            }
+        }
+    }
+
     let manager_mode = args.app.is_none()
         && !args.list_templates
         && args.create_from_template.is_none();
