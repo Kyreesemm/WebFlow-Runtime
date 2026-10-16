@@ -66,6 +66,7 @@ const translations = {
         updates_restarting: 'Перезапуск WebFlow Runtime...',
         updates_error_desc: 'Повторите попытку позже',
         update_button: 'Обновить',
+        restart_update_button: 'Перезапустить',
         check_updates_button: 'Проверить обновления',
         update_found_notification: 'Доступно обновление до {version}',
         updates_current_notification: 'Установлена актуальная версия',
@@ -221,6 +222,7 @@ const translations = {
         updates_restarting: 'Restarting WebFlow Runtime...',
         updates_error_desc: 'Please try again later',
         update_button: 'Update',
+        restart_update_button: 'Restart',
         check_updates_button: 'Check for Updates',
         update_found_notification: 'Update available: {version}',
         updates_current_notification: 'The latest version is already installed',
@@ -460,7 +462,8 @@ function setUpdateStatus(status, description, canUpdate = false, action = 'check
     if (button) {
         button.disabled = !canUpdate;
         button.className = action === 'update' ? 'btn' : 'btn btn-secondary';
-        button.innerHTML = `<span class="material-symbols-rounded">${action === 'update' ? 'download' : 'refresh'}</span><span>${action === 'update' ? translations[currentLang].update_button : translations[currentLang].check_updates_button}</span>`;
+        const label = action === 'restart' ? translations[currentLang].restart_update_button : action === 'update' ? translations[currentLang].update_button : translations[currentLang].check_updates_button;
+        button.innerHTML = `<span class="material-symbols-rounded">${action === 'update' ? 'download' : action === 'restart' ? 'restart_alt' : 'refresh'}</span><span>${label}</span>`;
     }
 }
 
@@ -516,6 +519,15 @@ function applyUpdateState(result, notify = false) {
             const update = state.result || state;
             if (state.status === 'checking') {
                 setUpdateStatus(translations[currentLang].updates_checking, translations[currentLang].updates_checking_desc);
+                return;
+            }
+            if (state.status === 'install_ready') {
+                updateAvailable = false;
+                const progress = document.getElementById('project-update-progress');
+                const bar = document.getElementById('project-update-progress-bar');
+                if (progress) progress.hidden = false;
+                if (bar) bar.style.width = '100%';
+                setUpdateStatus(state.message || translations[currentLang].updates_verifying, translations[currentLang].updates_available_desc, true, 'restart');
                 return;
             }
             if (update.status === 'update_available') {
@@ -576,7 +588,8 @@ function startUpdate() {
 }
 
 function handleUpdateButton() {
-    if (updateAvailable) startUpdate();
+    if (lastUpdateState?.status === 'install_ready') managerAPI?.restartAfterUpdate?.(() => {});
+    else if (updateAvailable) startUpdate();
     else checkForUpdates(true, true);
 }
 

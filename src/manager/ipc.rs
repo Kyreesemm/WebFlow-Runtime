@@ -268,6 +268,10 @@ pub fn handle_ipc_message(
             crate::updater::start_update();
             send_response(&webview_handle, id, "true");
         }
+        "restartAfterUpdate" => {
+            crate::updater::restart_after_update();
+            send_response(&webview_handle, id, "true");
+        }
         "openProjectLink" => {
             if let Some(url) = args.first().and_then(Value::as_str) {
                 let allowed = matches!(

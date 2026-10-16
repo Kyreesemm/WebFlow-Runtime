@@ -78,15 +78,40 @@ pub fn start_check(force: bool) {
 }
 
 pub fn start_update() {
-    if runtime_state().lock().map(|state| state.status == "downloading" || state.status == "verifying" || state.status == "restarting").unwrap_or(true) { return; }
+    if runtime_state().lock().map(|state| state.status == "downloading" || state.status == "verifying" || state.status == "install_ready" || state.status == "restarting").unwrap_or(true) { return; }
     let result = state().result;
     let Some(result) = result else { return; };
     thread::spawn(move || {
-        let result = download_and_start_update(result, |phase, percent, message| set_state(phase, percent, message, None));
-        if let Err(error) = result {
-            set_state("error", 0, &error, None);
+        match download_update(result, |phase, percent, message| set_state(phase, percent, message, None)) {
+            Ok(archive_path) => {
+                if let Ok(mut state) = runtime_state().lock() {
+                    state.status = "install_ready".into();
+                    state.percent = 100;
+                    state.message = "Update downloaded and verified".into();
+                    if let Some(result) = state.result.as_mut() {
+                        result.asset_name = archive_path.file_name().and_then(|name| name.to_str()).map(str::to_string);
+                    }
+                }
+            }
+            Err(error) => set_state("error", 0, &error, None),
         }
     });
+}
+
+pub fn restart_after_update() {
+    let snapshot = state();
+    if snapshot.status != "install_ready" { return; }
+    let Some(archive) = snapshot.result.and_then(|result| result.asset_name) else { return; };
+    let archive_path = crate::config::Config::get_runtime_dir().join("update").join(archive);
+    let pid = std::process::id().to_string();
+    match std::env::current_exe().and_then(|exe| Command::new(exe)
+        .arg("--update-helper").arg(archive_path).arg("--update-parent-pid").arg(pid).spawn()) {
+        Ok(_) => {
+            set_state("restarting", 100, "Restarting WebFlow Runtime", None);
+            std::process::exit(0);
+        }
+        Err(error) => set_state("error", 100, &format!("Failed to start update helper: {error}"), None),
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -255,7 +280,7 @@ fn check_remote_releases() -> UpdateCheck {
     }
 }
 
-pub fn download_and_start_update<F>(check: UpdateCheck, mut progress: F) -> Result<(), String>
+pub fn download_update<F>(check: UpdateCheck, mut progress: F) -> Result<PathBuf, String>
 where
     F: FnMut(&str, u8, &str),
 {
@@ -296,17 +321,8 @@ where
         let _ = fs::remove_file(&archive_path);
         return Err("SHA-256 digest mismatch".into());
     }
-    progress("verified", 92, "Update verified");
-    let pid = std::process::id().to_string();
-    Command::new(std::env::current_exe().map_err(|error| error.to_string())?)
-        .arg("--update-helper")
-        .arg(&archive_path)
-        .arg("--update-parent-pid")
-        .arg(pid)
-        .spawn()
-        .map_err(|error| format!("Failed to start update helper: {error}"))?;
-    progress("restarting", 100, "Restarting WebFlow Runtime");
-    std::process::exit(0);
+    progress("verified", 100, "Update downloaded and verified");
+    Ok(archive_path)
 }
 
 pub fn run_update_helper(archive: &str, parent_pid: Option<u32>) -> Result<(), String> {
@@ -513,7 +529,7 @@ mod tests {
             asset_digest: None,
             error: None,
         };
-        let error = super::download_and_start_update(check, |_, _, _| progress_calls += 1)
+        let error = super::download_update(check, |_, _, _| progress_calls += 1)
             .expect_err("non-update result should be rejected");
         assert_eq!(error, "No verified update is available");
         assert_eq!(progress_calls, 0);
