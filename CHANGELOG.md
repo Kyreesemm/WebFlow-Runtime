@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Minor edit of the Gemini name in neural network templates
+- Disabled text selection across the Manager interface while keeping text fields editable and selectable.
 
 ### Fixed
 - Fixed window size number input controls overflowing their borders and styled the increment and decrement buttons to match the WebFlow interface.
