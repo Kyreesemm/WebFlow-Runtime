@@ -993,7 +993,7 @@ mod tests {
     fn lists_all_bundled_templates_with_icons() {
         let templates = list_templates();
         let ids: Vec<_> = templates.iter().map(|template| template.id.as_str()).collect();
-        assert_eq!(ids, vec!["chatgpt", "claude", "deepseek", "gemini", "grok", "microsoft-copilot", "perplexity", "qwen", "rutube", "tiktok-mobile", "tiktok-web", "twitch", "vimeo", "vk-video", "youtube"]);
-        assert!(templates.iter().filter(|template| !["rutube", "tiktok-mobile", "tiktok-web", "twitch", "vk-video", "vimeo", "youtube"].contains(&template.id.as_str())).all(|template| template.icon_data.as_deref().is_some_and(|icon| icon.starts_with("data:image/png;base64,"))));
+        assert_eq!(ids, vec!["chatgpt", "claude", "deepseek", "gemini", "grok", "microsoft-copilot", "perplexity", "qwen", "rutube", "tiktok-web", "twitch", "vimeo", "vk-video", "youtube"]);
+        assert!(templates.iter().filter(|template| !["rutube", "tiktok-web", "twitch", "vimeo", "vk-video", "youtube"].contains(&template.id.as_str())).all(|template| template.icon_data.as_deref().is_some_and(|icon| icon.starts_with("data:image/png;base64,"))));
     }
 }

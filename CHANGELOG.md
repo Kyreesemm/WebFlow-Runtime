@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an optional per-application hardware acceleration setting for Linux and Windows.
 - Added a separate restart action after an update has downloaded and been verified.
 - Added the `--update` CLI command to check, download, verify, and install compatible updates.
-- Added seven video and streaming service templates, including separate TikTok web and mobile layouts.
+- Added six video and streaming service templates: YouTube, Twitch, TikTok, VK Video, Rutube, and Vimeo.
 
 ### Changed
 - Minor edit of the Gemini name in neural network templates
-- Updated TikTok Mobile to use the built-in Android User-Agent profile.
 - Disabled text selection across the Manager interface while keeping text fields editable and selectable.
+
+### Removed
+- Removed the redundant TikTok Mobile template, which used the same website as TikTok Web.
 
 ### Fixed
 - Fixed window size number input controls overflowing their borders and styled the increment and decrement buttons to match the WebFlow interface.
