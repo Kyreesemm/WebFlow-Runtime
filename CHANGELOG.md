@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.2.4-dev] - October 17th, 2026
+
 ### Added
 - Added `dev/venv/` to `.gitignore` for the development scripts' Python virtual environment.
 - Added a development helper for resizing PNG icons, adding transparent margins, and rounding corners.
