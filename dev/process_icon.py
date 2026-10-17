@@ -9,7 +9,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 CANVAS_SIZE = 512
 PADDING = 10
-CORNER_RADIUS = 20
+CORNER_RADIUS = 50
 
 
 def process_image(source: Path, destination: Path) -> None:

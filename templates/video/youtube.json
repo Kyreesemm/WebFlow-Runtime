@@ -4,6 +4,6 @@
   "name": { "ru": "YouTube", "en": "YouTube" },
   "description": { "ru": "Видео, трансляции и каналы со всего мира.", "en": "Videos, live streams, and channels from around the world." },
   "url": "https://www.youtube.com",
-  "icon": "../../materials/templates-icons/video/youtube-icon.png",
+  "icon": "../../materials/templates-icons/videos/youtube-icon.png",
   "app": { "name": "YouTube", "url": "https://www.youtube.com", "icon": "icon.png", "user_agent": "platform-chrome", "window": { "title": "YouTube", "width": 1280, "height": 800, "resizable": true, "custom_frame": false }, "isolated_storage": true }
 }
