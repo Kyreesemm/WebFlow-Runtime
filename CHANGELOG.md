@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Minor edit of the Gemini name in neural network templates
 - Disabled text selection across the Manager interface while keeping text fields editable and selectable.
+- Slightly widened the template picker while preserving its original category and card layout, and removed close-button movement on hover.
 
 ### Removed
 - Removed the redundant TikTok Mobile template, which used the same website as TikTok Web.
