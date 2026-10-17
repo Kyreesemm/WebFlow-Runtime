@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added `dev/venv/` to `.gitignore` for the development scripts' Python virtual environment.
 - Added a development helper for resizing PNG icons, adding transparent margins, and rounding corners.
 - Added an optional per-application hardware acceleration setting for Linux and Windows.
 - Added a separate restart action after an update has downloaded and been verified.
