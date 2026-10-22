@@ -168,7 +168,12 @@ const translations = {
         no_file_selected: 'Файл не выбран',
         no_importable_cookies: 'Подходящие cookies не найдены',
         google_oauth_fallback: 'Обход блокировок Google OAuth',
-        google_oauth_fallback_desc: 'Использовать системный браузер для авторизации через Google аккаунт'
+        google_oauth_fallback_desc: 'Использовать системный браузер для авторизации через Google аккаунт',
+        default_ua_badge: 'По умолчанию',
+        builtin_ua_badge: 'Встроенный',
+        custom_ua_badge: 'Пользовательский',
+        copied_to_clipboard: 'Скопировано в буфер обмена',
+        copy: 'Копировать'
     },
     en: {
         create_app: 'Create Application',
@@ -331,7 +336,12 @@ const translations = {
         no_file_selected: 'No file selected',
         no_importable_cookies: 'No importable cookies were found',
         google_oauth_fallback: 'Google OAuth Fallback',
-        google_oauth_fallback_desc: 'Use system default browser for Google account login'
+        google_oauth_fallback_desc: 'Use system default browser for Google account login',
+        default_ua_badge: 'Default',
+        builtin_ua_badge: 'Built-in',
+        custom_ua_badge: 'Custom',
+        copied_to_clipboard: 'Copied to clipboard',
+        copy: 'Copy'
     }
 };
 
@@ -1289,17 +1299,43 @@ function loadUserAgents() {
         const userAgents = JSON.parse(uaJson);
         const container = document.getElementById('ua-list');
 
-        container.innerHTML = userAgents.map(ua => `
-            <div class="ua-item">
-                <div class="ua-content">
-                    <div class="ua-name">${ua.name}</div>
-                    <div class="ua-string">${ua.string}</div>
+        container.innerHTML = userAgents.map(ua => {
+            const isDefault = ua.id === 'default';
+            const badgeClass = isDefault ? 'ua-badge default' : (ua.custom ? 'ua-badge custom' : 'ua-badge');
+            const badgeText = isDefault
+                ? (translations[currentLang].default_ua_badge || 'По умолчанию')
+                : (ua.custom ? (translations[currentLang].custom_ua_badge || 'Пользовательский') : (translations[currentLang].builtin_ua_badge || 'Встроенный'));
+
+            return `
+                <div class="ua-item">
+                    <div class="ua-content">
+                        <div class="ua-header-row">
+                            <span class="${badgeClass}">${badgeText}</span>
+                            <span class="ua-name">${ua.name}</span>
+                        </div>
+                        <div class="ua-string">${ua.string}</div>
+                    </div>
+                    <div class="ua-actions">
+                        <button class="ua-action-btn" onclick="copyUserAgentString('${ua.string.replace(/'/g, "\\'")}')" title="${translations[currentLang].copy || 'Копировать'}">
+                            <span class="material-symbols-rounded">content_copy</span>
+                        </button>
+                        ${ua.custom ? `
+                            <button class="ua-action-btn danger" onclick="deleteUserAgent('${ua.id}')" title="${translations[currentLang].delete || 'Удалить'}">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="ua-actions">
-                    ${ua.custom ? `<button class="btn btn-small btn-delete" onclick="deleteUserAgent('${ua.id}')">Удалить</button>` : ''}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+    });
+}
+
+function copyUserAgentString(string) {
+    navigator.clipboard.writeText(string).then(() => {
+        showNotification(translations[currentLang].copied_to_clipboard || 'Скопировано в буфер обмена', 'success');
+    }).catch(err => {
+        console.error('Failed to copy User-Agent:', err);
     });
 }
 
