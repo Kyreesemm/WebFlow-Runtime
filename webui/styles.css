@@ -972,6 +972,11 @@ body.theme-transitioning * {
 }
 
 /* Settings Sections */
+.settings-tab-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .settings-section {
     background: var(--gradient-card);
     border: 1px solid var(--border);
@@ -1023,8 +1028,9 @@ body.theme-transitioning * {
 }
 
 .settings-description {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
+    opacity: 0.6;
     margin-top: 4px;
 }
 
@@ -1721,6 +1727,11 @@ body.theme-transitioning * {
 }
 
 /* Settings Sections */
+.settings-tab-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .settings-section {
     background: var(--gradient-card);
     border: 1px solid var(--border);
@@ -1754,8 +1765,9 @@ body.theme-transitioning * {
 }
 
 .settings-description {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
+    opacity: 0.6;
     margin-top: 4px;
 }
 

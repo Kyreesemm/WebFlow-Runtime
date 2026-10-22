@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Converted the top manager header into a floating panel with refined balanced margins and compact inner padding.
+- Redesigned the General Settings tab with a centered 800px max-width container, semantic card grouping ("System Integration", "System Tray", "Authorization & Network"), and refined micro-typography.
 
 ---
 
