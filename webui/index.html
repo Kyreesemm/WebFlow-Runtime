@@ -212,46 +212,58 @@
 
         <!-- Tab: Storage -->
         <div id="tab-storage" class="tab-content">
-            <div class="settings-section">
-                <h3 data-i18n="storage_mode">Режим хранилища</h3>
-                <div class="settings-row">
-                    <div>
-                        <div class="settings-label" data-i18n="isolated_storage">Изолированное хранилище по умолчанию</div>
-                        <div class="settings-description" data-i18n="isolated_storage_desc">Каждое приложение использует отдельное хранилище куки и данных</div>
-                    </div>
-                    <div class="toggle-group">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-isolated-storage" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-section">
-                <h3 data-i18n="data_management">Управление данными</h3>
-                <div class="private-storage-section">
-                    <h4 data-i18n="private_storage_title">Изолированные хранилища приложений</h4>
-                    <div id="private-storage-list" class="private-storage-list"></div>
-                </div>
-                <div class="storage-info">
-                    <div class="storage-item">
-                        <span class="storage-label" data-i18n="total_cache_size">Общий размер кэша:</span>
-                        <span class="storage-value" id="total-cache-size">Вычисление...</span>
-                    </div>
-                    <div class="storage-item">
-                        <span class="storage-label" data-i18n="total_data_size">Общий размер данных:</span>
-                        <span class="storage-value" id="total-data-size">Вычисление...</span>
+            <div class="settings-tab-container">
+                <div class="settings-section">
+                    <h3 data-i18n="storage_mode">Режим хранилища</h3>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label" data-i18n="isolated_storage">Изолированное хранилище по умолчанию</div>
+                            <div class="settings-description" data-i18n="isolated_storage_desc">Каждое приложение использует отдельное хранилище куки и данных</div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-isolated-storage" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="storage-actions">
-                    <button class="btn btn-secondary" onclick="clearAllCache()">
-                        <span class="material-symbols-rounded">delete_sweep</span>
-                        <span data-i18n="clear_cache">Очистить кэш всех приложений</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearAllData()">
-                        <span class="material-symbols-rounded">cookie</span>
-                        <span data-i18n="clear_cookies">Очистить куки всех приложений</span>
-                    </button>
+                <div class="settings-section">
+                    <h3 data-i18n="data_management">Управление данными</h3>
+                    <div class="storage-metrics-grid">
+                        <div class="storage-metric-card">
+                            <div class="storage-metric-icon">
+                                <span class="material-symbols-rounded">cached</span>
+                            </div>
+                            <div class="storage-metric-content">
+                                <div class="storage-metric-label" data-i18n="total_cache_label">Общий кэш</div>
+                                <div class="storage-metric-value" id="total-cache-size">Вычисление...</div>
+                            </div>
+                        </div>
+                        <div class="storage-metric-card">
+                            <div class="storage-metric-icon">
+                                <span class="material-symbols-rounded">folder_zip</span>
+                            </div>
+                            <div class="storage-metric-content">
+                                <div class="storage-metric-label" data-i18n="total_data_label">Данные профилей</div>
+                                <div class="storage-metric-value" id="total-data-size">Вычисление...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="private-storage-section">
+                        <h4 data-i18n="private_storage_title">Изолированные хранилища приложений</h4>
+                        <div id="private-storage-list" class="private-storage-list"></div>
+                    </div>
+                    <div class="storage-actions">
+                        <button class="btn btn-secondary" onclick="clearAllCache()">
+                            <span class="material-symbols-rounded">delete_sweep</span>
+                            <span data-i18n="clear_cache">Очистить кэш всех приложений</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearAllData()">
+                            <span class="material-symbols-rounded">cookie</span>
+                            <span data-i18n="clear_cookies">Очистить куки всех приложений</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

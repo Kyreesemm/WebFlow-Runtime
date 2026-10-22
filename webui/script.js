@@ -107,6 +107,8 @@ const translations = {
         clear_cookies: 'Очистить куки всех приложений',
         total_cache_size: 'Общий размер кэша:',
         total_data_size: 'Общий размер данных:',
+        total_cache_label: 'Общий кэш',
+        total_data_label: 'Данные профилей',
         private_storage_size: 'Пользовательские данные:',
         private_cache_size: 'Кэш:',
         private_data_size: 'Данные:',
@@ -266,6 +268,8 @@ const translations = {
         clear_cookies: 'Clear Cookies for All Apps',
         total_cache_size: 'Total Cache Size:',
         total_data_size: 'Total Data Size:',
+        total_cache_label: 'Total Cache',
+        total_data_label: 'Profile Data',
         private_storage_size: 'User Data:',
         private_cache_size: 'Cache:',
         private_data_size: 'Data:',
@@ -1497,6 +1501,23 @@ async function clearAllData() {
     });
 }
 
+async function clearAppCacheByName(appId) {
+    if (!managerAPI) return;
+
+    const confirmed = await showConfirm(translations[currentLang].clear_app_cache + '?', translations[currentLang].clear);
+    if (!confirmed) return;
+
+    showProgress();
+    managerAPI.clearAppCache(appId, result => {
+        hideProgress();
+        updateStorageInfo();
+        showNotification(
+            result === 'true' ? translations[currentLang].cache_cleared : translations[currentLang].error_saving,
+            result === 'true' ? 'success' : 'error'
+        );
+    });
+}
+
 // Обновление статусов приложений
 let statusUpdateInterval = null;
 let storageUpdateInterval = null;
@@ -1921,12 +1942,17 @@ function updateStorageInfo() {
                 if (container) {
                     container.innerHTML = sizes.length
                         ? sizes.map(item => `
-                            <div class="storage-item">
-                                <span class="storage-label">${item.name}</span>
-                                <span class="storage-details">
-                                    <span><span class="storage-detail-label">${translations[currentLang].private_cache_size}</span> ${item.cache_size || '0 B'}</span>
-                                    <span><span class="storage-detail-label">${translations[currentLang].private_data_size}</span> ${item.data_size || '0 B'}</span>
-                                </span>
+                            <div class="storage-table-row">
+                                <div class="storage-app-meta">
+                                    <span class="storage-app-name">${item.name}</span>
+                                    <span class="storage-app-sizes">
+                                        <span><span class="storage-detail-label">${translations[currentLang].private_cache_size}</span> ${item.cache_size || '0 B'}</span>
+                                        <span><span class="storage-detail-label">${translations[currentLang].private_data_size}</span> ${item.data_size || '0 B'}</span>
+                                    </span>
+                                </div>
+                                <button class="storage-clear-btn" onclick="clearAppCacheByName('${item.id}')" title="${translations[currentLang].clear_app_cache}">
+                                    <span class="material-symbols-rounded">delete</span>
+                                </button>
                             </div>
                         `).join('')
                         : `<div class="storage-empty">${translations[currentLang].no_private_storage}</div>`;
