@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Converted the top manager header into a floating panel with refined balanced margins and compact inner padding.
 - Redesigned the General Settings tab with a centered 800px max-width container, semantic card grouping ("System Integration", "System Tray", "Authorization & Network"), and refined micro-typography.
 - Redesigned the Storage tab with top metric widget cards, a clean app registry table featuring borderless and background-free application icons, bullet-separated size details, and individual cache clearance actions.
-- Redesigned the User-Agents tab with centered 800px max-width layout, active status / default badges, monospaced technical strings, copy buttons for all agents, and conditional delete action buttons for custom agents.
+- Redesigned the User-Agents tab with full-width layout, active status / default badges, monospaced technical strings, copy buttons for all agents, and conditional delete action buttons for custom agents.
 
 ---
 
