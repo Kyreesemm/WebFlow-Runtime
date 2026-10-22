@@ -2215,7 +2215,7 @@ body.theme-transitioning * {
 
 .path-label .material-symbols-rounded {
     font-size: 20px;
-    color: var(--accent-orange);
+    color: var(--text-secondary);
 }
 
 .path-value {
@@ -2230,12 +2230,12 @@ body.theme-transitioning * {
     border-radius: 6px;
     padding: 6px 12px;
     font-size: 12px;
-    font-family: 'Courier New', monospace;
+    font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     color: var(--text-secondary);
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    max-width: 360px;
+    overflow-x: auto;
     white-space: nowrap;
+    text-overflow: clip;
 }
 
 .btn-icon {
@@ -2260,12 +2260,17 @@ body.theme-transitioning * {
     font-size: 20px;
 }
 
-.form-actions {
+.settings-section .form-actions {
     display: flex;
     gap: 12px;
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
+}
+
+.settings-section .form-actions .btn {
+    flex: 1;
+    justify-content: center;
 }
 
 /* Project information tab */

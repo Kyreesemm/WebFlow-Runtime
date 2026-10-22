@@ -1730,11 +1730,31 @@ async function loadEngineSettings() {
             }
         }
 
-        document.getElementById('userdata-path').value = settings.current_userdata_path || '';
-        document.getElementById('apps-path').textContent = settings.current_apps_path || '';
-        document.getElementById('config-path').textContent = settings.current_config_path || '';
-        document.getElementById('runtime-path').textContent = settings.current_runtime_path || '';
-        document.getElementById('shared-storage-path').textContent = settings.current_shared_storage_path || '';
+        const userdataInput = document.getElementById('userdata-path');
+        if (userdataInput) {
+            userdataInput.value = settings.current_userdata_path || '';
+            userdataInput.title = settings.current_userdata_path || '';
+        }
+        const appsPathElem = document.getElementById('apps-path');
+        if (appsPathElem) {
+            appsPathElem.textContent = settings.current_apps_path || '';
+            appsPathElem.title = settings.current_apps_path || '';
+        }
+        const configPathElem = document.getElementById('config-path');
+        if (configPathElem) {
+            configPathElem.textContent = settings.current_config_path || '';
+            configPathElem.title = settings.current_config_path || '';
+        }
+        const runtimePathElem = document.getElementById('runtime-path');
+        if (runtimePathElem) {
+            runtimePathElem.textContent = settings.current_runtime_path || '';
+            runtimePathElem.title = settings.current_runtime_path || '';
+        }
+        const sharedStoragePathElem = document.getElementById('shared-storage-path');
+        if (sharedStoragePathElem) {
+            sharedStoragePathElem.textContent = settings.current_shared_storage_path || '';
+            sharedStoragePathElem.title = settings.current_shared_storage_path || '';
+        }
 
         // Автосохранение общих настроек при клике по чекбоксам
         if (autostartElem && !autostartElem.dataset.listener) {
