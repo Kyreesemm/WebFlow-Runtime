@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Converted the top manager header into a floating panel with refined balanced margins and compact inner padding.
 - Redesigned the General Settings tab with a centered 800px max-width container, semantic card grouping ("System Integration", "System Tray", "Authorization & Network"), and refined micro-typography.
-- Redesigned the Storage tab with top metric widget cards, a clean app registry table with individual cache clearance actions, and grouped global actions.
+- Redesigned the Storage tab with top metric widget cards, a clean app registry table featuring application icons, bullet-separated size details, and individual cache clearance actions.
 
 ---
 

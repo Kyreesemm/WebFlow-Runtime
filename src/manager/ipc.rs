@@ -489,6 +489,16 @@ pub fn handle_ipc_message(
             for app_id in Config::list_apps() {
                 if let Some(config) = Config::load_app_config(&app_id) {
                     if config.isolated_storage {
+                        Config::ensure_app_icon(&app_id);
+                        let icon_path = Config::get_app_icon_path(&app_id);
+                        let has_icon = icon_path.exists();
+                        let icon_data = if has_icon {
+                            fs::read(&icon_path).ok().map(|bytes| {
+                                format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))
+                            })
+                        } else {
+                            None
+                        };
                         let storage_sizes = storage_size(
                             &Config::get_apps_dir().join(&app_id).join("storage"),
                         );
@@ -497,6 +507,8 @@ pub fn handle_ipc_message(
                             "name": config.name,
                             "cache_size": format_size(storage_sizes.cache),
                             "data_size": format_size(storage_sizes.data),
+                            "hasIcon": has_icon,
+                            "iconData": icon_data,
                         }));
                     }
                 }

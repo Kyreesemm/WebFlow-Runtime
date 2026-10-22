@@ -1941,20 +1941,30 @@ function updateStorageInfo() {
                 const container = document.getElementById('private-storage-list');
                 if (container) {
                     container.innerHTML = sizes.length
-                        ? sizes.map(item => `
-                            <div class="storage-table-row">
-                                <div class="storage-app-meta">
-                                    <span class="storage-app-name">${item.name}</span>
-                                    <span class="storage-app-sizes">
-                                        <span><span class="storage-detail-label">${translations[currentLang].private_cache_size}</span> ${item.cache_size || '0 B'}</span>
-                                        <span><span class="storage-detail-label">${translations[currentLang].private_data_size}</span> ${item.data_size || '0 B'}</span>
-                                    </span>
+                        ? sizes.map(item => {
+                            const iconHtml = item.hasIcon && item.iconData
+                                ? `<img src="${item.iconData}" alt="${item.name}">`
+                                : `<span>${item.name.charAt(0).toUpperCase()}</span>`;
+
+                            return `
+                                <div class="storage-table-row">
+                                    <div class="storage-app-main">
+                                        <div class="storage-app-icon">${iconHtml}</div>
+                                        <div class="storage-app-meta">
+                                            <span class="storage-app-name">${item.name}</span>
+                                            <span class="storage-app-sizes">
+                                                <span><span class="storage-detail-label">${translations[currentLang].private_cache_size}</span> ${item.cache_size || '0 B'}</span>
+                                                <span class="storage-separator">•</span>
+                                                <span><span class="storage-detail-label">${translations[currentLang].private_data_size}</span> ${item.data_size || '0 B'}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button class="storage-clear-btn" onclick="clearAppCacheByName('${item.id}')" title="${translations[currentLang].clear_app_cache}">
+                                        <span class="material-symbols-rounded">delete</span>
+                                    </button>
                                 </div>
-                                <button class="storage-clear-btn" onclick="clearAppCacheByName('${item.id}')" title="${translations[currentLang].clear_app_cache}">
-                                    <span class="material-symbols-rounded">delete</span>
-                                </button>
-                            </div>
-                        `).join('')
+                            `;
+                        }).join('')
                         : `<div class="storage-empty">${translations[currentLang].no_private_storage}</div>`;
                 }
             } catch (error) {
