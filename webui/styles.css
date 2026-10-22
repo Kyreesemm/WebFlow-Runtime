@@ -213,8 +213,11 @@ body.theme-transitioning * {
 /* Header */
 .header {
     background: var(--bg-secondary);
-    padding: 12px 30px;
-    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    margin: 16px 16px 0 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -334,8 +337,7 @@ body.theme-transitioning * {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 30px 40px;
-    padding-top: 50px;
+    padding: 20px 16px;
     overflow-y: auto;
     flex: 1;
     width: 100%;
@@ -1242,8 +1244,7 @@ body.theme-transitioning * {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 30px 40px;
-    padding-top: 50px;
+    padding: 20px 16px;
     overflow-y: auto;
     flex: 1;
     width: 100%;

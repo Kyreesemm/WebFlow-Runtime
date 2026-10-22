@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Converted the top manager header into a floating panel with refined balanced margins and compact inner padding.
+
 ---
 
 ## [v0.2.4-dev] - October 17th, 2026
