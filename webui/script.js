@@ -10,6 +10,10 @@ let lastUpdateState = null;
 // Переводы
 const translations = {
     ru: {
+        appearance_settings: 'Внешний вид', appearance_language: 'Язык', appearance_theme: 'Тема',
+        theme_dark: 'Тёмная', theme_light: 'Светлая', quick_actions: 'Быстрые кнопки действий',
+        quick_actions_desc: 'Показывать кнопки смены темы и языка в верхней панели',
+        accent_color: 'Цвет оформления', accent_color_desc: 'Выберите основной акцентный цвет интерфейса',
         create_app: 'Создать приложение',
         edit_app: 'Редактировать приложение',
         refresh: 'Обновить',
@@ -176,6 +180,10 @@ const translations = {
         copy: 'Копировать'
     },
     en: {
+        appearance_settings: 'Appearance', appearance_language: 'Language', appearance_theme: 'Theme',
+        theme_dark: 'Dark', theme_light: 'Light', quick_actions: 'Quick action buttons',
+        quick_actions_desc: 'Show the theme and language buttons in the top bar',
+        accent_color: 'Accent color', accent_color_desc: 'Choose the main interface accent color',
         create_app: 'Create Application',
         edit_app: 'Edit Application',
         refresh: 'Refresh',
@@ -417,6 +425,60 @@ function applyTranslations() {
     // Обновить file input (это делается через CSS, но текст нужно обновить через JS)
     // Браузер не позволяет менять текст file input напрямую, это ограничение безопасности
     updateFileInputLabel();
+    syncAppearanceControls();
+}
+
+function syncAppearanceControls() {
+    const language = document.getElementById('appearance-language');
+    const theme = document.getElementById('appearance-theme');
+    const quickActions = document.getElementById('appearance-quick-actions');
+    if (language) language.value = currentLang;
+    if (theme) theme.value = document.body.getAttribute('data-theme') || 'dark';
+    if (quickActions) quickActions.checked = localStorage.getItem('quickActions') !== 'false';
+    document.querySelectorAll('.header-actions').forEach(actions => {
+        actions.classList.toggle('quick-actions-hidden', localStorage.getItem('quickActions') === 'false');
+    });
+    const accent = getAccentColor();
+    document.body.setAttribute('data-accent', accent);
+    document.querySelectorAll('.accent-option').forEach(option => {
+        option.classList.toggle('selected', option.dataset.accent === accent);
+        option.setAttribute('aria-pressed', String(option.dataset.accent === accent));
+    });
+}
+
+function getAccentColor() {
+    const stored = localStorage.getItem('accentColor');
+    return ['orange', 'lavender', 'green', 'gray'].includes(stored) ? stored : 'orange';
+}
+
+function setLanguage(language) {
+    if (!translations[language]) return;
+    currentLang = language;
+    document.body.setAttribute('data-lang', currentLang);
+    localStorage.setItem('language', currentLang);
+    applyTranslations();
+    loadProjectInfo();
+    saveFullWindowState();
+    loadApps();
+}
+
+function setTheme(theme) {
+    if (theme !== 'dark' && theme !== 'light') return;
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    syncAppearanceControls();
+    saveFullWindowState();
+}
+
+function setQuickActions(enabled) {
+    localStorage.setItem('quickActions', String(enabled));
+    syncAppearanceControls();
+}
+
+function setAccentColor(color) {
+    if (!['orange', 'lavender', 'green', 'gray'].includes(color)) return;
+    localStorage.setItem('accentColor', color);
+    syncAppearanceControls();
 }
 
 function updateProjectComponentLabels() {
@@ -684,13 +746,7 @@ function populateBuiltInUserAgents(selectedId = 'default') {
 
 // Переключение языка
 function toggleLanguage() {
-    currentLang = currentLang === 'ru' ? 'en' : 'ru';
-    document.body.setAttribute('data-lang', currentLang);
-    localStorage.setItem('language', currentLang);
-    applyTranslations();
-    loadProjectInfo();
-    saveFullWindowState();
-    loadApps(); // Перезагрузить приложения для обновления текста
+    setLanguage(currentLang === 'ru' ? 'en' : 'ru');
 }
 
 // Переключение темы с анимацией
@@ -702,6 +758,7 @@ function toggleTheme() {
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     body.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
+    syncAppearanceControls();
 
     setTimeout(() => {
         body.classList.remove('theme-transitioning');
@@ -797,6 +854,7 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
 // Загрузка сохранённой темы
 const savedTheme = localStorage.getItem('theme') || 'dark';
 document.body.setAttribute('data-theme', savedTheme);
+document.body.setAttribute('data-accent', getAccentColor());
 
 // Управление вкладками (иконки в header)
 document.addEventListener('DOMContentLoaded', function() {

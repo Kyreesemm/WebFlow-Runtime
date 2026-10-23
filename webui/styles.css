@@ -79,6 +79,30 @@
     --gradient-card: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
 }
 
+[data-accent="lavender"] {
+    --accent-orange: #a78bfa;
+    --accent-orange-light: #c4b5fd;
+    --accent-orange-dark: #8b5cf6;
+    --gradient-orange: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
+    --gradient-orange-alt: linear-gradient(135deg, #c4b5fd 0%, #ddd6fe 100%);
+}
+
+[data-accent="green"] {
+    --accent-orange: #55b985;
+    --accent-orange-light: #79d19f;
+    --accent-orange-dark: #369765;
+    --gradient-orange: linear-gradient(135deg, #55b985 0%, #79d19f 100%);
+    --gradient-orange-alt: linear-gradient(135deg, #79d19f 0%, #a2e2ba 100%);
+}
+
+[data-accent="gray"] {
+    --accent-orange: #aeb8c4;
+    --accent-orange-light: #cbd2da;
+    --accent-orange-dark: #8995a3;
+    --gradient-orange: linear-gradient(135deg, #aeb8c4 0%, #cbd2da 100%);
+    --gradient-orange-alt: linear-gradient(135deg, #cbd2da 0%, #e0e4e9 100%);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -323,6 +347,43 @@ body.theme-transitioning * {
 .lang-text {
     font-weight: 600;
     font-size: 12px;
+}
+
+.quick-actions-hidden { display: none !important; }
+
+.appearance-select {
+    min-width: 150px;
+    padding: 9px 12px;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.appearance-select:focus { outline: 1px solid var(--accent-orange); }
+
+.accent-options { display: flex; gap: 10px; }
+
+.accent-option {
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.accent-option:hover { transform: scale(1.1); }
+.accent-option.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--accent-orange); }
+.accent-option[data-accent="orange"] { background: #ff6b35; }
+.accent-option[data-accent="lavender"] { background: #a78bfa; }
+.accent-option[data-accent="green"] { background: #55b985; }
+.accent-option[data-accent="gray"] { background: #aeb8c4; }
+
+@media (max-width: 560px) {
+    .appearance-colors-row { align-items: flex-start; flex-direction: column; gap: 12px; }
+    .appearance-select { min-width: 130px; }
 }
 
 .theme-icon::before {

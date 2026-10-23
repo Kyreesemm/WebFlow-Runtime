@@ -72,6 +72,47 @@
         <!-- Tab: Settings -->
         <div id="tab-settings" class="tab-content settings-tab-container">
             <div class="settings-section">
+                <h3 data-i18n="appearance_settings">Внешний вид</h3>
+                <div class="settings-row">
+                    <div><div class="settings-label" data-i18n="appearance_language">Язык</div></div>
+                    <select id="appearance-language" class="appearance-select" onchange="setLanguage(this.value)">
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <div><div class="settings-label" data-i18n="appearance_theme">Тема</div></div>
+                    <select id="appearance-theme" class="appearance-select" onchange="setTheme(this.value)">
+                        <option value="dark" data-i18n="theme_dark">Тёмная</option>
+                        <option value="light" data-i18n="theme_light">Светлая</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label" data-i18n="quick_actions">Быстрые кнопки действий</div>
+                        <div class="settings-description" data-i18n="quick_actions_desc">Показывать кнопки смены темы и языка в верхней панели</div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="appearance-quick-actions" checked onchange="setQuickActions(this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row appearance-colors-row">
+                    <div>
+                        <div class="settings-label" data-i18n="accent_color">Цвет оформления</div>
+                        <div class="settings-description" data-i18n="accent_color_desc">Выберите основной акцентный цвет интерфейса</div>
+                    </div>
+                    <div class="accent-options" role="group" aria-label="Accent color">
+                        <button type="button" class="accent-option" data-accent="orange" onclick="setAccentColor('orange')" aria-label="Orange" title="Orange"></button>
+                        <button type="button" class="accent-option" data-accent="lavender" onclick="setAccentColor('lavender')" aria-label="Lavender" title="Lavender"></button>
+                        <button type="button" class="accent-option" data-accent="green" onclick="setAccentColor('green')" aria-label="Green" title="Green"></button>
+                        <button type="button" class="accent-option" data-accent="gray" onclick="setAccentColor('gray')" aria-label="Light gray" title="Light gray"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-section">
                 <h3 data-i18n="system_integration">Системная интеграция</h3>
                 <div class="settings-row">
                     <div>
