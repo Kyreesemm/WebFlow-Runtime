@@ -11,6 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use walkdir::WalkDir;
 use wry::WebView;
+use tao::event_loop::EventLoopProxy;
 use base64::Engine;
 
 #[derive(Debug, Deserialize)]
@@ -26,6 +27,7 @@ pub fn handle_ipc_message(
     body: &str,
     debug: bool,
     debug_verbose: bool,
+    event_proxy: EventLoopProxy<super::ManagerEvent>,
 ) {
     let payload: IpcPayload = match serde_json::from_str(body) {
         Ok(p) => p,
@@ -406,6 +408,15 @@ pub fn handle_ipc_message(
                     let _ = fs::write(path, json_str);
                 }
             }
+            send_response(&webview_handle, id, "true");
+        }
+        "refreshAccentIcons" => {
+            Config::refresh_accent_icons_and_shortcuts();
+            #[cfg(target_os = "linux")]
+            super::prepare_manager_desktop_entry(&Config::accent_icon_path("webflow_runtime_icon", "png"));
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            super::ensure_manager_shortcut();
+            let _ = event_proxy.send_event(super::ManagerEvent::AccentChanged);
             send_response(&webview_handle, id, "true");
         }
         "selectFolder" => {

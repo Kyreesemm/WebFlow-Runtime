@@ -6,26 +6,48 @@ use wry::http::{HeaderValue, Response};
 #[folder = "webui/"]
 pub struct WebUIAssets;
 
-fn material_asset(path: &str) -> Option<(&'static [u8], &'static str)> {
+fn material_asset(path: &str) -> Option<(Vec<u8>, &'static str)> {
     match path {
-        "materials/default/webflow_runtime_icon.png" => Some((
-            include_bytes!("../../materials/default/webflow_runtime_icon.png"),
-            "image/png",
-        )),
+        "materials/default/webflow_runtime_icon_orange.png"
+        | "materials/default/webflow_runtime_icon_lavender.png"
+        | "materials/default/webflow_runtime_icon_green.png"
+        | "materials/default/webflow_runtime_icon_gray.png"
+        | "materials/default/webflow_runtime_icon.png"
+        | "materials/default/app_icon_orange.png"
+        | "materials/default/app_icon_lavender.png"
+        | "materials/default/app_icon_green.png"
+        | "materials/default/app_icon_gray.png"
+        | "materials/default/app_icon.png" => {
+            let (icon_name, accent) = match path {
+                "materials/default/webflow_runtime_icon_orange.png" | "materials/default/webflow_runtime_icon.png" => ("webflow_runtime_icon", "orange"),
+                "materials/default/webflow_runtime_icon_lavender.png" => ("webflow_runtime_icon", "lavender"),
+                "materials/default/webflow_runtime_icon_green.png" => ("webflow_runtime_icon", "green"),
+                "materials/default/webflow_runtime_icon_gray.png" => ("webflow_runtime_icon", "gray"),
+                "materials/default/app_icon_orange.png" | "materials/default/app_icon.png" => ("app_icon", "orange"),
+                "materials/default/app_icon_lavender.png" => ("app_icon", "lavender"),
+                "materials/default/app_icon_green.png" => ("app_icon", "green"),
+                "materials/default/app_icon_gray.png" => ("app_icon", "gray"),
+                _ => return None,
+            };
+            let icon_path = crate::config::Config::accent_icon_path_for(
+                &crate::config::Config::get_base_dir(), icon_name, "png", accent,
+            );
+            Some((std::fs::read(icon_path).ok()?, "image/png"))
+        }
         "materials/fonts/Roboto-Regular.ttf" => Some((
-            include_bytes!("../../materials/fonts/Roboto-Regular.ttf"),
+            include_bytes!("../../materials/fonts/Roboto-Regular.ttf").to_vec(),
             "font/ttf",
         )),
         "materials/fonts/Roboto-Medium.ttf" => Some((
-            include_bytes!("../../materials/fonts/Roboto-Medium.ttf"),
+            include_bytes!("../../materials/fonts/Roboto-Medium.ttf").to_vec(),
             "font/ttf",
         )),
         "materials/fonts/Roboto-Bold.ttf" => Some((
-            include_bytes!("../../materials/fonts/Roboto-Bold.ttf"),
+            include_bytes!("../../materials/fonts/Roboto-Bold.ttf").to_vec(),
             "font/ttf",
         )),
         "materials/fonts/MaterialSymbolsRounded.ttf" => Some((
-            include_bytes!("../../materials/fonts/MaterialSymbolsRounded.ttf"),
+            include_bytes!("../../materials/fonts/MaterialSymbolsRounded.ttf").to_vec(),
             "font/ttf",
         )),
         _ => None,
@@ -48,7 +70,7 @@ pub fn handle_custom_protocol_request(path: &str) -> Response<Cow<'static, [u8]>
         return Response::builder()
             .status(200)
             .header("Content-Type", mime)
-            .body(Cow::Borrowed(data))
+            .body(Cow::Owned(data))
             .unwrap();
     }
 
@@ -97,6 +119,23 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some("font/ttf"));
         assert!(!response.body().is_empty());
+    }
+
+    #[test]
+    fn serves_accent_icon_assets() {
+        for path in [
+            "materials/default/webflow_runtime_icon_orange.png",
+            "materials/default/webflow_runtime_icon_lavender.png",
+            "materials/default/webflow_runtime_icon_green.png",
+            "materials/default/webflow_runtime_icon_gray.png",
+            "materials/default/app_icon_lavender.png",
+            "materials/default/app_icon_green.png",
+            "materials/default/app_icon_gray.png",
+        ] {
+            let response = handle_custom_protocol_request(path);
+            assert_eq!(response.status(), StatusCode::OK, "{path}");
+            assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some("image/png"));
+        }
     }
 
     #[test]

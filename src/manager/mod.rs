@@ -14,17 +14,25 @@ use serde_json::{json, Value};
 use std::fs;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tao::event_loop::ControlFlow;
+use tao::event_loop::{ControlFlow, EventLoopProxy};
 use tao::window::Window;
 use tray_icon::menu::MenuEvent;
 use wry::{WebView, WebViewBuilder};
 
-const MANAGER_ICON_BYTES: &[u8] = include_bytes!("../../materials/default/webflow_runtime_icon.png");
+fn manager_icon_bytes() -> Vec<u8> {
+    std::fs::read(crate::config::Config::accent_icon_path("webflow_runtime_icon", "png"))
+        .unwrap_or_else(|_| include_bytes!("../../materials/default/webflow_runtime_icon.png").to_vec())
+}
 #[cfg(target_os = "linux")]
 const MANAGER_APP_ID: &str = "com.webflow.runtime.manager";
 
+#[derive(Debug)]
+pub enum ManagerEvent {
+    AccentChanged,
+}
+
 #[cfg(target_os = "linux")]
-fn prepare_manager_desktop_entry(icon_path: &std::path::Path) {
+pub(super) fn prepare_manager_desktop_entry(icon_path: &std::path::Path) {
     use std::fs;
     use std::path::PathBuf;
 
@@ -53,7 +61,7 @@ fn prepare_manager_desktop_entry(icon_path: &std::path::Path) {
 }
 
 #[cfg(target_os = "linux")]
-fn ensure_manager_shortcut() {
+pub(super) fn ensure_manager_shortcut() {
     use std::path::PathBuf;
 
     let Some(data_home) = std::env::var_os("XDG_DATA_HOME")
@@ -62,8 +70,8 @@ fn ensure_manager_shortcut() {
         return;
     };
     let Ok(executable) = std::env::current_exe() else { return };
+    let icon_path = crate::config::Config::accent_icon_path("webflow_runtime_icon", "png");
     let base_dir = executable.parent().unwrap_or_else(|| std::path::Path::new("."));
-    let icon_path = base_dir.join("materials/default/webflow_runtime_icon.png");
     let shortcut_path = data_home.join("applications/webflow-runtime.desktop");
     let quote = |value: &str| format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""));
     let content = format!(
@@ -83,11 +91,11 @@ fn ensure_manager_shortcut() {
 }
 
 #[cfg(target_os = "windows")]
-fn ensure_manager_shortcut() {
+pub(super) fn ensure_manager_shortcut() {
     let Ok(executable) = std::env::current_exe() else { return };
     let Some(app_data) = std::env::var_os("APPDATA") else { return };
     let base_dir = executable.parent().unwrap_or_else(|| std::path::Path::new("."));
-    let icon_path = base_dir.join("materials\\default\\webflow_runtime_icon.ico");
+    let icon_path = crate::config::Config::accent_icon_path("webflow_runtime_icon", "ico");
     let shortcut_path = std::path::PathBuf::from(app_data)
         .join("Microsoft/Windows/Start Menu/Programs/WebFlow Runtime Manager.lnk");
     let script = r#"
@@ -199,10 +207,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
     };
     let activation_receiver = start_activation_listener();
     let (width, height, position) = load_manager_geometry();
-    let icon_path = crate::config::Config::get_base_dir()
-        .join("materials")
-        .join("default")
-        .join("webflow_runtime_icon.png");
+    let icon_path = crate::config::Config::accent_icon_path("webflow_runtime_icon", "png");
 
     #[cfg(target_os = "linux")]
     prepare_manager_desktop_entry(&icon_path);
@@ -217,12 +222,12 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
         use tao::event_loop::EventLoopBuilder;
         use tao::platform::unix::EventLoopBuilderExtUnix;
 
-        let mut builder = EventLoopBuilder::new();
+        let mut builder = EventLoopBuilder::<ManagerEvent>::with_user_event();
         builder.with_app_id(MANAGER_APP_ID);
         builder.build()
     };
     #[cfg(not(target_os = "linux"))]
-    let event_loop = tao::event_loop::EventLoop::new();
+    let event_loop = tao::event_loop::EventLoopBuilder::<ManagerEvent>::with_user_event().build();
 
     let options = WindowOptions {
         title: "WebFlow Runtime Manager".to_string(),
@@ -232,7 +237,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
         frame_style: WindowFrameStyle::System,
         debug,
         position,
-        icon: load_window_icon_bytes(MANAGER_ICON_BYTES),
+        icon: load_window_icon_bytes(&manager_icon_bytes()),
         min_width: MANAGER_MIN_WIDTH,
         min_height: MANAGER_MIN_HEIGHT,
         max_width: MAX_WINDOW_WIDTH,
@@ -244,7 +249,8 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
     apply_window_icon(&window, &icon_path, options.icon.clone());
 
     let webview_handle: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
-    create_webview(&window, webview_handle.clone(), debug, debug_verbose)?;
+    let event_proxy = event_loop.create_proxy();
+    create_webview(&window, webview_handle.clone(), debug, debug_verbose, event_proxy.clone())?;
 
     let engine_settings = crate::config::Config::load_engine_settings();
     if engine_settings.check_updates_on_startup {
@@ -252,7 +258,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
     }
     let mut tray_enabled = engine_settings.minimize_to_tray;
     let mut tray = if tray_enabled {
-        match ManagerTray::create(MANAGER_ICON_BYTES) {
+        match ManagerTray::create(&manager_icon_bytes()) {
             Ok(new_tray) => {
                 new_tray.set_interface_visible(true);
                 Some(new_tray)
@@ -285,7 +291,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
                 window.set_minimized(false);
                 window.set_focus();
                 if webview_handle.lock().unwrap().is_none() {
-                    if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose) {
+                    if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose, event_proxy.clone()) {
                         eprintln!("Failed to restore manager WebView: {error}");
                     }
                 }
@@ -307,7 +313,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
                         window.set_visible(true);
                         window.set_focus();
                         if webview_handle.lock().unwrap().is_none() {
-                            if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose) {
+                            if let Err(error) = create_webview(&window, webview_handle.clone(), debug, debug_verbose, event_proxy.clone()) {
                                 eprintln!("Failed to restore manager WebView: {error}");
                             }
                         }
@@ -324,7 +330,7 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
         if desired_tray != tray_enabled {
             tray_enabled = desired_tray;
             if tray_enabled {
-                match ManagerTray::create(MANAGER_ICON_BYTES) {
+                match ManagerTray::create(&manager_icon_bytes()) {
                     Ok(new_tray) => {
                         new_tray.set_interface_visible(window.is_visible());
                         tray = Some(new_tray);
@@ -350,6 +356,16 @@ pub fn run_manager(debug: bool, debug_verbose: bool, started_from_autostart: boo
         }
 
         match event {
+            tao::event::Event::UserEvent(ManagerEvent::AccentChanged) => {
+                let icon_path = crate::config::Config::accent_icon_path("webflow_runtime_icon", "png");
+                let icon_bytes = manager_icon_bytes();
+                apply_window_icon(&window, &icon_path, load_window_icon_bytes(&icon_bytes));
+                if let Some(current_tray) = tray.as_ref() {
+                    if let Err(error) = current_tray.set_icon(&icon_bytes) {
+                        eprintln!("Failed to update manager tray icon: {error}");
+                    }
+                }
+            }
             tao::event::Event::WindowEvent {
                 event: tao::event::WindowEvent::CloseRequested
                     | tao::event::WindowEvent::Destroyed,
@@ -389,6 +405,7 @@ fn create_webview(
     webview_handle: Arc<Mutex<Option<WebView>>>,
     debug: bool,
     debug_verbose: bool,
+    event_proxy: EventLoopProxy<ManagerEvent>,
 ) -> Result<(), String> {
     if debug {
         ipc::debug_print("35", "WEBVIEW", "creating manager WebView".to_string());
@@ -409,7 +426,7 @@ fn create_webview(
     }
     let mut builder = builder
         .with_ipc_handler(move |req| {
-            ipc::handle_ipc_message(webview_clone.clone(), req.body(), debug, debug_verbose);
+            ipc::handle_ipc_message(webview_clone.clone(), req.body(), debug, debug_verbose, event_proxy.clone());
         })
         .with_url("webflow://manager/index.html");
 

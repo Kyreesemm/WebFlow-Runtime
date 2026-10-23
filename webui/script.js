@@ -440,6 +440,9 @@ function syncAppearanceControls() {
     });
     const accent = getAccentColor();
     document.body.setAttribute('data-accent', accent);
+    document.querySelectorAll('[data-accent-icon]').forEach(icon => {
+        icon.src = `webflow://manager/materials/default/${icon.dataset.accentIcon}_${accent}.png`;
+    });
     document.querySelectorAll('.accent-option').forEach(option => {
         option.classList.toggle('selected', option.dataset.accent === accent);
         option.setAttribute('aria-pressed', String(option.dataset.accent === accent));
@@ -479,6 +482,9 @@ function setAccentColor(color) {
     if (!['orange', 'lavender', 'green', 'gray'].includes(color)) return;
     localStorage.setItem('accentColor', color);
     syncAppearanceControls();
+    saveFullWindowState();
+    if (managerAPI?.refreshAccentIcons) managerAPI.refreshAccentIcons(function() {});
+    loadApps();
 }
 
 function updateProjectComponentLabels() {
@@ -777,6 +783,7 @@ function saveFullWindowState() {
     const state = {
         theme: document.body.getAttribute('data-theme') || 'dark',
         language: currentLang,
+        accent_color: getAccentColor(),
         active_tab: activeTab
     };
 
@@ -812,6 +819,10 @@ new QWebChannel(qt.webChannelTransport, function(channel) {
                     currentLang = state.language;
                     document.body.setAttribute('data-lang', currentLang);
                     localStorage.setItem('language', currentLang);
+                }
+                if (['orange', 'lavender', 'green', 'gray'].includes(state.accent_color)) {
+                    localStorage.setItem('accentColor', state.accent_color);
+                    document.body.setAttribute('data-accent', state.accent_color);
                 }
                 if (state.active_tab) {
                     const tabBtn = document.querySelector(`.tab-icon[data-tab="${state.active_tab}"]`);

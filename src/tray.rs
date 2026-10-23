@@ -41,6 +41,12 @@ impl ManagerTray {
             "Показать интерфейс"
         });
     }
+
+    pub fn set_icon(&self, icon_bytes: &[u8]) -> Result<(), String> {
+        let icon = load_icon(icon_bytes)
+            .ok_or_else(|| "Failed to decode manager tray icon".to_string())?;
+        self._icon.set_icon(Some(icon)).map_err(|error| error.to_string())
+    }
 }
 
 fn load_icon(bytes: &[u8]) -> Option<Icon> {

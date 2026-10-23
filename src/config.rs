@@ -20,6 +20,7 @@ pub struct WindowConfig {
 #[cfg(test)]
 mod tests {
     use super::{AppConfig, Config, EngineSettings, WindowConfig};
+    use std::fs;
 
     #[test]
     fn defaults_match_runtime_expectations() {
@@ -80,6 +81,19 @@ mod tests {
         assert_eq!(Config::shortcut_id("my app/one"), "my-app-one");
         assert_eq!(Config::shortcut_id("valid_123-name"), "valid_123-name");
         assert_eq!(Config::shortcut_id(""), "");
+    }
+
+    #[test]
+    fn accent_icon_paths_select_matching_assets_and_fall_back_to_defaults() {
+        let temp = std::env::temp_dir().join(format!("webflow-accent-icons-{}", std::process::id()));
+        let defaults = temp.join("materials/default");
+        fs::create_dir_all(&defaults).expect("create icon directory");
+        fs::write(defaults.join("app_icon.png"), b"default").expect("write default icon");
+        fs::write(defaults.join("app_icon_green.png"), b"green").expect("write accent icon");
+
+        assert_eq!(Config::accent_icon_path_for(&temp, "app_icon", "png", "green"), defaults.join("app_icon_green.png"));
+        assert_eq!(Config::accent_icon_path_for(&temp, "app_icon", "png", "lavender"), defaults.join("app_icon.png"));
+        fs::remove_dir_all(temp).expect("remove icon directory");
     }
 }
 
@@ -201,6 +215,33 @@ impl Default for EngineSettings {
 pub struct Config;
 
 impl Config {
+    pub fn selected_accent() -> String {
+        let path = Self::get_config_dir().join("window_state.json");
+        let accent = fs::read_to_string(path)
+            .ok()
+            .and_then(|contents| serde_json::from_str::<serde_json::Value>(&contents).ok())
+            .and_then(|state| state.get("accent_color").and_then(serde_json::Value::as_str).map(str::to_owned));
+        match accent.as_deref() {
+            Some("lavender" | "green" | "gray") => accent.unwrap_or_else(|| "orange".to_string()),
+            _ => "orange".to_string(),
+        }
+    }
+
+    pub fn accent_icon_path(name: &str, extension: &str) -> PathBuf {
+        let accent = Self::selected_accent();
+        Self::accent_icon_path_for(&Self::get_base_dir(), name, extension, &accent)
+    }
+
+    pub fn accent_icon_path_for(base_dir: &Path, name: &str, extension: &str, accent: &str) -> PathBuf {
+        let default_dir = base_dir.join("materials").join("default");
+        let accented = default_dir.join(format!("{name}_{accent}.{extension}"));
+        if accented.exists() {
+            accented
+        } else {
+            default_dir.join(format!("{name}.{extension}"))
+        }
+    }
+
     pub fn is_gnome_session() -> bool {
         #[cfg(target_os = "linux")]
         {
@@ -289,27 +330,56 @@ impl Config {
 
     pub fn get_app_icon_path(app_id: &str) -> PathBuf {
         let custom_icon = Self::get_apps_dir().join(app_id).join("icon.png");
-        if custom_icon.exists() {
+        let config_path = Self::get_apps_dir().join(app_id).join("config.json");
+        let custom_icon_selected = fs::read_to_string(config_path)
+            .ok()
+            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
+            .and_then(|config| config.icon)
+            .as_deref() == Some("icon.png");
+        if custom_icon_selected && custom_icon.exists() {
             custom_icon
         } else {
-            Self::get_base_dir()
-                .join("materials")
-                .join("default")
-                .join("app_icon.png")
+            Self::accent_icon_path("app_icon", "png")
+        }
+    }
+
+    pub fn app_shortcut_icon_path(app_id: &str) -> PathBuf {
+        let config_path = Self::get_apps_dir().join(app_id).join("config.json");
+        let is_custom = fs::read_to_string(config_path)
+            .ok()
+            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
+            .and_then(|config| config.icon)
+            .as_deref() == Some("icon.png");
+        if is_custom {
+            let custom_png = Self::get_apps_dir().join(app_id).join("icon.png");
+            if custom_png.exists() {
+                return custom_png;
+            }
+        }
+        if cfg!(target_os = "windows") {
+            let icon = Self::accent_icon_path("app_icon", "ico");
+            if icon.exists() {
+                icon
+            } else {
+                Self::accent_icon_path("webflow_runtime_icon", "ico")
+            }
+        } else {
+            Self::accent_icon_path("app_icon", "png")
         }
     }
 
     pub fn ensure_app_icon(app_id: &str) {
         let app_dir = Self::get_apps_dir().join(app_id);
         let icon_path = app_dir.join("icon.png");
-        if icon_path.exists() {
+        let default_icon = Self::accent_icon_path("app_icon", "png");
+        let is_custom_icon = fs::read_to_string(app_dir.join("config.json"))
+            .ok()
+            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
+            .and_then(|config| config.icon)
+            .as_deref() == Some("icon.png");
+        if is_custom_icon && icon_path.exists() {
             return;
         }
-
-        let default_icon = Self::get_base_dir()
-            .join("materials")
-            .join("default")
-            .join("app_icon.png");
         if default_icon.exists() {
             let _ = fs::create_dir_all(&app_dir);
             let _ = fs::copy(default_icon, icon_path);
@@ -373,6 +443,15 @@ impl Config {
         }
     }
 
+    pub fn refresh_accent_icons_and_shortcuts() {
+        for app_id in Self::list_apps() {
+            Self::ensure_app_icon(&app_id);
+            if let Some(config) = Self::load_app_config(&app_id) {
+                Self::sync_app_shortcut(&app_id, &config);
+            }
+        }
+    }
+
     fn shortcut_id(app_id: &str) -> String {
         app_id.chars().map(|ch| {
             if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' { ch } else { '-' }
@@ -388,7 +467,7 @@ impl Config {
         let Some(base_dir) = executable.parent() else { return };
         let applications = data_home.join("applications");
         let path = applications.join(format!("webflow-runtime-app-{}.desktop", Self::shortcut_id(app_id)));
-        let icon = Self::get_app_icon_path(app_id);
+        let icon = Self::app_shortcut_icon_path(app_id);
         let quote = |value: &str| format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""));
         let content = format!(
             "[Desktop Entry]\nType=Application\nName={}\nExec={} --app {}\nIcon={}\nTerminal=false\nCategories=Utility;\nPath={}\n",
@@ -405,7 +484,7 @@ impl Config {
         let Some(app_data) = std::env::var_os("APPDATA") else { return };
         let Some(user_profile) = std::env::var_os("USERPROFILE") else { return };
         let Some(base_dir) = executable.parent() else { return };
-        let icon = Self::get_app_icon_path(app_id);
+        let icon = Self::app_shortcut_icon_path(app_id);
         let shortcut_name = format!("WebFlow Runtime - {}.lnk", Self::shortcut_id(app_id));
         let paths = [
             PathBuf::from(app_data).join("Microsoft/Windows/Start Menu/Programs").join(&shortcut_name),
@@ -506,10 +585,7 @@ if ($shortcut.TargetPath -ne $env:WEBFLOW_APP_SHORTCUT_TARGET -or $shortcut.Argu
                 fs::create_dir_all(&autostart_dir).map_err(|error| error.to_string())?;
                 let executable = std::env::current_exe().map_err(|error| error.to_string())?;
                 let executable = executable.to_string_lossy().replace('"', "\\\"");
-                let icon_path = Self::get_base_dir()
-                    .join("materials")
-                    .join("default")
-                    .join("webflow_runtime_icon.png")
+                let icon_path = Self::accent_icon_path("webflow_runtime_icon", "png")
                     .to_string_lossy()
                     .replace('\\', "\\\\")
                     .replace(' ', "\\s");
