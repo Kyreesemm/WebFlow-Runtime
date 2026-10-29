@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v0.3.0-dev] - October 29th, 2026
+
 ### Added
 - Added Appearance settings for language, theme, header quick actions, and four accent color choices.
 - Added orange, lavender, green, and gray manager and standard application icons in PNG and ICO formats.

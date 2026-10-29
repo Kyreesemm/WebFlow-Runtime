@@ -1,4 +1,4 @@
-# WebFlow Runtime Project (now on Rust)
+# WebFlow Runtime Project
 
 <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
 <img alt="Rust" src="https://img.shields.io/badge/Rust-1.94.1-000000?logo=rust&logoColor=white">
