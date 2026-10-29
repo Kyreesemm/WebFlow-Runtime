@@ -37,14 +37,25 @@ fn prepare_linux_app_id(app_id: &str, config: &AppConfig, icon_path: &std::path:
                 escape_exec_arg(app_id),
                 icon_path.to_string_lossy()
             );
+            let _ = fs::write(applications_dir.join(format!("{}.desktop", desktop_id)), &desktop_entry);
+            let launcher_entry = desktop_entry.replace("NoDisplay=true\n", "");
             let _ = fs::write(
-                applications_dir.join(format!("{}.desktop", desktop_id)),
-                desktop_entry,
+                applications_dir.join(format!("webflow-runtime-app-{}.desktop", Config::shortcut_id(app_id))),
+                launcher_entry,
             );
         }
     }
 
     desktop_id
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) fn refresh_linux_app_desktop_entries() {
+    for app_id in Config::list_apps() {
+        let Some(config) = Config::load_app_config(&app_id) else { continue };
+        let icon = Config::get_app_icon_path(&app_id);
+        let _ = prepare_linux_app_id(&app_id, &config, &icon);
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -57,6 +68,9 @@ fn create_app_event_loop(app_id: &str, config: &AppConfig, icon_path: &std::path
     builder.with_app_id(desktop_id);
     builder.build()
 }
+
+#[cfg(not(target_os = "linux"))]
+pub(crate) fn refresh_linux_app_desktop_entries() {}
 
 #[cfg(not(target_os = "linux"))]
 fn create_app_event_loop(_app_id: &str, _config: &AppConfig, _icon_path: &std::path::Path) -> EventLoop<()> {

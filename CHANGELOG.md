@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added orange, lavender, green, and gray manager and standard application icons in PNG and ICO formats.
 
 ### Changed
+- Matched Linux application desktop entries to their runtime application IDs and refreshes their theme icons alongside generated launchers.
+- Matched the Linux manager desktop entry to its application ID so the taskbar and launcher use the selected accent icon.
 - Applied the selected accent color consistently to the animated header title, controls, highlights, icons, and scrollbars, and matched appearance dropdowns to the active theme.
 - Refined the appearance dropdowns to match the compact form controls used elsewhere in the manager.
 - Added accent icon selection support for manager and app icons across windows, trays, shortcuts, app listings, and the project page. Icon files can be supplied separately for lavender, green, and gray.

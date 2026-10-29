@@ -446,7 +446,7 @@ impl Config {
         }
     }
 
-    fn shortcut_id(app_id: &str) -> String {
+    pub(crate) fn shortcut_id(app_id: &str) -> String {
         app_id.chars().map(|ch| {
             if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' { ch } else { '-' }
         }).collect()

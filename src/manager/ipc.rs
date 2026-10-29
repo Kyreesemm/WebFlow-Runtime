@@ -412,6 +412,7 @@ pub fn handle_ipc_message(
         }
         "refreshAccentIcons" => {
             Config::refresh_accent_icons_and_shortcuts();
+            crate::app_runner::refresh_linux_app_desktop_entries();
             #[cfg(target_os = "linux")]
             super::prepare_manager_desktop_entry(&Config::accent_icon_path("webflow_runtime_icon", "png"));
             #[cfg(any(target_os = "linux", target_os = "windows"))]
