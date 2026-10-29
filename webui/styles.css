@@ -2270,8 +2270,9 @@ body.theme-transitioning * {
 }
 
 .path-item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 151px minmax(0, 1fr);
+    column-gap: 28px;
     align-items: center;
     padding: 12px 0;
 }
@@ -2298,6 +2299,7 @@ body.theme-transitioning * {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 .path-value code {
@@ -2308,7 +2310,8 @@ body.theme-transitioning * {
     font-size: 12px;
     font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     color: var(--text-secondary);
-    max-width: 360px;
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     white-space: nowrap;
     text-overflow: clip;

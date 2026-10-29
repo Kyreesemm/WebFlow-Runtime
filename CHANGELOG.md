@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added orange, lavender, green, and gray manager and standard application icons in PNG and ICO formats.
 
 ### Changed
+- Aligned Engine Settings path fields to a shared width based on the longest path label.
 - Matched Linux application desktop entries to their runtime application IDs and refreshes their theme icons alongside generated launchers.
 - Matched the Linux manager desktop entry to its application ID so the taskbar and launcher use the selected accent icon.
 - Applied the selected accent color consistently to the animated header title, controls, highlights, icons, and scrollbars, and matched appearance dropdowns to the active theme.
