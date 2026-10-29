@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added Appearance settings for language, theme, header quick actions, and four accent color choices.
+- Added orange, lavender, green, and gray manager and standard application icons in PNG and ICO formats.
 
 ### Changed
 - Applied the selected accent color consistently to the animated header title, controls, highlights, icons, and scrollbars, and matched appearance dropdowns to the active theme.
 - Refined the appearance dropdowns to match the compact form controls used elsewhere in the manager.
 - Added accent icon selection support for manager and app icons across windows, trays, shortcuts, app listings, and the project page. Icon files can be supplied separately for lavender, green, and gray.
+- Updated bundled accent icons and moved the previous default icons to `no-public/old_icons/`.
 - Converted the top manager header into a floating panel with refined balanced margins and compact inner padding.
 - Redesigned the General Settings tab with a centered 800px max-width container, semantic card grouping ("System Integration", "System Tray", "Authorization & Network"), and refined micro-typography.
 - Redesigned the Storage tab with top metric widget cards, a clean app registry table featuring borderless and background-free application icons, bullet-separated size details, and individual cache clearance actions.

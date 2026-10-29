@@ -17,7 +17,25 @@ fn material_asset(path: &str) -> Option<(Vec<u8>, &'static str)> {
         | "materials/default/app_icon_lavender.png"
         | "materials/default/app_icon_green.png"
         | "materials/default/app_icon_gray.png"
-        | "materials/default/app_icon.png" => {
+        | "materials/default/app_icon.png"
+        | "materials/default/webflow_runtime_icon_orange.ico"
+        | "materials/default/webflow_runtime_icon_lavender.ico"
+        | "materials/default/webflow_runtime_icon_green.ico"
+        | "materials/default/webflow_runtime_icon_gray.ico"
+        | "materials/default/app_icon_orange.ico"
+        | "materials/default/app_icon_lavender.ico"
+        | "materials/default/app_icon_green.ico"
+        | "materials/default/app_icon_gray.ico" => {
+            if path.ends_with(".ico") {
+                let (icon_name, accent) = path
+                    .strip_prefix("materials/default/")?.rsplit_once('.')?.0.rsplit_once('_')?;
+                let icon_name = match icon_name { "webflow_runtime_icon" | "app_icon" => icon_name, _ => return None };
+                let accent = match accent { "orange" | "lavender" | "green" | "gray" => accent, _ => return None };
+                let icon_path = crate::config::Config::accent_icon_path_for(
+                    &crate::config::Config::get_base_dir(), icon_name, "ico", accent,
+                );
+                return Some((std::fs::read(icon_path).ok()?, "image/x-icon"));
+            }
             let (icon_name, accent) = match path {
                 "materials/default/webflow_runtime_icon_orange.png" | "materials/default/webflow_runtime_icon.png" => ("webflow_runtime_icon", "orange"),
                 "materials/default/webflow_runtime_icon_lavender.png" => ("webflow_runtime_icon", "lavender"),
@@ -131,10 +149,19 @@ mod tests {
             "materials/default/app_icon_lavender.png",
             "materials/default/app_icon_green.png",
             "materials/default/app_icon_gray.png",
+            "materials/default/webflow_runtime_icon_orange.ico",
+            "materials/default/webflow_runtime_icon_lavender.ico",
+            "materials/default/webflow_runtime_icon_green.ico",
+            "materials/default/webflow_runtime_icon_gray.ico",
+            "materials/default/app_icon_orange.ico",
+            "materials/default/app_icon_lavender.ico",
+            "materials/default/app_icon_green.ico",
+            "materials/default/app_icon_gray.ico",
         ] {
             let response = handle_custom_protocol_request(path);
             assert_eq!(response.status(), StatusCode::OK, "{path}");
-            assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some("image/png"));
+            let expected_mime = if path.ends_with(".ico") { "image/x-icon" } else { "image/png" };
+            assert_eq!(response.headers().get("Content-Type").and_then(|v| v.to_str().ok()), Some(expected_mime));
         }
     }
 

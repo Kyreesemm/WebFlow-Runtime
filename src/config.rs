@@ -330,13 +330,7 @@ impl Config {
 
     pub fn get_app_icon_path(app_id: &str) -> PathBuf {
         let custom_icon = Self::get_apps_dir().join(app_id).join("icon.png");
-        let config_path = Self::get_apps_dir().join(app_id).join("config.json");
-        let custom_icon_selected = fs::read_to_string(config_path)
-            .ok()
-            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
-            .and_then(|config| config.icon)
-            .as_deref() == Some("icon.png");
-        if custom_icon_selected && custom_icon.exists() {
+        if Self::app_icon_is_selected(app_id) && custom_icon.exists() {
             custom_icon
         } else {
             Self::accent_icon_path("app_icon", "png")
@@ -344,13 +338,7 @@ impl Config {
     }
 
     pub fn app_shortcut_icon_path(app_id: &str) -> PathBuf {
-        let config_path = Self::get_apps_dir().join(app_id).join("config.json");
-        let is_custom = fs::read_to_string(config_path)
-            .ok()
-            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
-            .and_then(|config| config.icon)
-            .as_deref() == Some("icon.png");
-        if is_custom {
+        if Self::app_icon_is_selected(app_id) {
             let custom_png = Self::get_apps_dir().join(app_id).join("icon.png");
             if custom_png.exists() {
                 return custom_png;
@@ -372,18 +360,24 @@ impl Config {
         let app_dir = Self::get_apps_dir().join(app_id);
         let icon_path = app_dir.join("icon.png");
         let default_icon = Self::accent_icon_path("app_icon", "png");
-        let is_custom_icon = fs::read_to_string(app_dir.join("config.json"))
-            .ok()
-            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok())
-            .and_then(|config| config.icon)
-            .as_deref() == Some("icon.png");
-        if is_custom_icon && icon_path.exists() {
+        if Self::app_icon_is_selected(app_id) && icon_path.exists() {
             return;
         }
         if default_icon.exists() {
             let _ = fs::create_dir_all(&app_dir);
             let _ = fs::copy(default_icon, icon_path);
         }
+    }
+
+    fn app_icon_is_selected(app_id: &str) -> bool {
+        let app_dir = Self::get_apps_dir().join(app_id);
+        let config = fs::read_to_string(app_dir.join("config.json"))
+            .ok()
+            .and_then(|contents| serde_json::from_str::<AppConfig>(&contents).ok());
+        if config.as_ref().and_then(|config| config.icon.as_deref()) != Some("icon.png") {
+            return false;
+        }
+        true
     }
 
     pub fn list_apps() -> Vec<String> {

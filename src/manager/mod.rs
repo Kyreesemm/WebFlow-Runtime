@@ -21,7 +21,7 @@ use wry::{WebView, WebViewBuilder};
 
 fn manager_icon_bytes() -> Vec<u8> {
     std::fs::read(crate::config::Config::accent_icon_path("webflow_runtime_icon", "png"))
-        .unwrap_or_else(|_| include_bytes!("../../materials/default/webflow_runtime_icon.png").to_vec())
+        .unwrap_or_else(|_| include_bytes!("../../materials/default/webflow_runtime_icon_orange.png").to_vec())
 }
 #[cfg(target_os = "linux")]
 const MANAGER_APP_ID: &str = "com.webflow.runtime.manager";
